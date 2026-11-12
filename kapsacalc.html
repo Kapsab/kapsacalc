@@ -1,0 +1,3208 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="theme-color" content="#0f172a" id="metaThemeColor" />
+  <meta name="description" content="Kaypan GeoSystems — Offline-First Land Surveying, Geodetic & Engineering PWA" />
+  <title>Kaypan GeoSystems — Survey & Geodetic Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            gold: {
+              400: '#d4b483',
+              500: '#c2a172',
+              600: '#a88758',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    /* Custom subtle scrollbars & print rules for Booking Sheets */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.35); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(194, 161, 114, 0.7); }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @media print {
+      body * { visibility: hidden; }
+      #printArea, #printArea * { visibility: visible; }
+      #printArea { position: absolute; left: 0; top: 0; width: 100%; background: #fff !important; color: #000 !important; padding: 20px; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-gold-500 selection:text-slate-950">
+
+  <!-- TOP HEADER BAR -->
+  <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-3 sm:px-5 py-2.5 flex items-center justify-between gap-2">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <a href="https://kaypangeosystems.com" target="_blank" rel="noopener" title="Return to Kaypan GeoSystems Software Hub"
+         class="flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 transition shrink-0">
+        <svg class="w-4 h-4 text-gold-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="hidden md:inline">Software Hub</span>
+      </a>
+
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-gold-500 to-amber-700 flex items-center justify-center text-slate-950 shadow-sm shrink-0">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="12" cy="12" r="9"/>
+            <line x1="12" y1="2" x2="12" y2="22"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <div class="truncate">
+          <h1 class="text-sm sm:text-base font-bold tracking-tight truncate">Kaypan GeoSystems</h1>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">Survey &amp; Geodetic Engine • Offline PWA</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header Controls -->
+    <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+      <!-- PWA Install Button (Shown when beforeinstallprompt fires) -->
+      <button id="pwaInstallBtn" onclick="installPWA()" class="hidden items-center gap-1.5 px-3 py-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-slate-950 text-xs font-semibold shadow-sm transition">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="hidden sm:inline">Install App</span>
+      </button>
+
+      <!-- Mobile Toggle Coordinate Drawer -->
+      <button onclick="toggleMobileDbDrawer()" class="lg:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold transition">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+        <span>Points (<span id="mobilePtCount">0</span>)</span>
+      </button>
+
+      <!-- Import / Export Quick Triggers -->
+      <button onclick="openModal('importModal')" title="Import CSV, JSON, TXT" class="flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-medium transition">
+        <svg class="w-4 h-4 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="hidden sm:inline">Import</span>
+      </button>
+
+      <button onclick="openModal('exportModal')" title="Export CSV, JSON, TXT" class="flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-medium transition">
+        <svg class="w-4 h-4 text-cyan-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="hidden sm:inline">Export</span>
+      </button>
+
+      <!-- Dark / Light Theme Toggle -->
+      <button onclick="toggleTheme()" id="themeToggleBtn" title="Toggle Dark / Light Theme" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-gold-400 transition">
+        <svg id="sunIcon" class="w-4 h-4 hidden dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke-linecap="round"/>
+        </svg>
+        <svg id="moonIcon" class="w-4 h-4 block dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- STATUS BANNER -->
+  <div class="bg-slate-200/70 dark:bg-slate-900/70 border-b border-slate-200 dark:border-slate-800 px-4 py-1.5 flex items-center justify-between text-xs">
+    <div class="flex items-center gap-2 truncate">
+      <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+      <span id="statusText" class="font-mono text-slate-700 dark:text-slate-300 truncate">Ready — Local storage active (No login required)</span>
+    </div>
+    <div class="hidden sm:flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
+      <span>D.MMSS Angle Format</span>
+      <span>•</span>
+      <span>Clarke 1880 &amp; WGS84</span>
+    </div>
+  </div>
+
+  <!-- MAIN WORKSPACE -->
+  <div class="flex-1 flex flex-col lg:flex-row max-w-[1680px] w-full mx-auto pb-20 lg:pb-0">
+
+    <!-- DESKTOP LEFT NAVIGATION RAIL (8 Survey Groups) -->
+    <aside class="hidden lg:flex flex-col w-56 shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-3 gap-1.5">
+      <div class="px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Survey Modules</div>
+      <nav id="desktopNav" class="flex flex-col gap-1"></nav>
+
+      <div class="mt-auto pt-3 border-t border-slate-200 dark:border-slate-800">
+        <button onclick="openModal('aboutModal')" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <svg class="w-4 h-4 text-gold-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01" stroke-linecap="round"/>
+          </svg>
+          <span>Geodetic Reference &amp; Help</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- CENTER COMPUTATION WORKSPACE -->
+    <main class="flex-1 min-w-0 p-3 sm:p-5 flex flex-col gap-4">
+      <!-- Sub-tool Pills Bar (Touch friendly horizontal scroll) -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 shadow-sm">
+        <div class="flex items-center justify-between px-2 pb-1.5">
+          <span id="activeModuleTitle" class="text-xs font-bold uppercase tracking-wider text-gold-600 dark:text-gold-400">1. COGO Computations</span>
+          <span class="text-[11px] text-slate-400">Select method</span>
+        </div>
+        <div id="subMenuPills" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5"></div>
+      </div>
+
+      <!-- Active Calculator Form Container -->
+      <section id="calculatorWorkspace" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm flex-1">
+        <!-- Dynamic content injected here -->
+      </section>
+    </main>
+
+    <!-- RIGHT COORDINATE DATABASE PANEL (Persistent Local Storage + Multi-row Select) -->
+    <aside id="dbPanel" class="fixed inset-0 z-50 lg:static lg:z-auto hidden lg:flex flex-col w-full lg:w-[460px] xl:w-[520px] shrink-0 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 p-3 sm:p-4">
+      <!-- Mobile Drawer Header -->
+      <div class="flex lg:hidden items-center justify-between pb-3 mb-3 border-b border-slate-200 dark:border-slate-800">
+        <h2 class="font-bold text-base">Coordinate Database</h2>
+        <button onclick="toggleMobileDbDrawer()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm font-semibold">Close ✕</button>
+      </div>
+
+      <!-- DB Toolbar -->
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <div>
+          <h2 class="text-sm font-bold flex items-center gap-2">
+            <span>Coordinate Database</span>
+            <span id="ptCountBadge" class="px-2 py-0.5 text-[11px] font-mono rounded-full bg-gold-500/20 text-gold-600 dark:text-gold-400">0 pts</span>
+          </h2>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">Tap row or select checkboxes for bulk actions</p>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button onclick="openSinglePointModal()" class="flex items-center gap-1 px-3 py-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-slate-950 text-xs font-semibold shadow-sm transition">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+            <span>Add Point</span>
+          </button>
+          <button onclick="openModal('importModal')" class="flex items-center gap-1 px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-medium transition">
+            <span>Bulk File</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Search & Quick Row Actions -->
+      <div class="flex items-center gap-2 mb-2.5">
+        <div class="relative flex-1">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
+          </svg>
+          <input id="dbSearchInput" type="text" oninput="renderPointsTable()" placeholder="Search Point ID, Y, X, Code..."
+                 class="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:border-gold-500" />
+        </div>
+        <button onclick="loadSampleData()" title="Load Sample Zambian/Southern African Points" class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-medium transition shrink-0">
+          Samples
+        </button>
+      </div>
+
+      <!-- Multi-Row Selection Action Bar -->
+      <div id="multiSelectBar" class="mb-2.5 p-2 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-1.5 text-xs">
+        <span class="font-medium text-slate-600 dark:text-slate-300"><strong id="selectedCount">0</strong> selected</span>
+        <div class="flex flex-wrap items-center gap-1">
+          <button onclick="sendSelectedToArea()" class="px-2 py-1 rounded-lg bg-cyan-600/20 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-600/30 font-medium transition">→ Area</button>
+          <button onclick="sendSelectedToTraverse()" class="px-2 py-1 rounded-lg bg-amber-600/20 text-amber-700 dark:text-amber-300 hover:bg-amber-600/30 font-medium transition">→ Traverse</button>
+          <button onclick="batchHelmertTransformSelected()" class="px-2 py-1 rounded-lg bg-purple-600/20 text-purple-700 dark:text-purple-300 hover:bg-purple-600/30 font-medium transition">→ Helmert</button>
+          <button onclick="openModal('exportModal')" class="px-2 py-1 rounded-lg bg-emerald-600/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600/30 font-medium transition">Export</button>
+          <button onclick="deleteSelectedPoints()" class="px-2 py-1 rounded-lg bg-rose-600/20 text-rose-700 dark:text-rose-300 hover:bg-rose-600/30 font-medium transition">Delete</button>
+        </div>
+      </div>
+
+      <!-- Coordinate Table -->
+      <div class="flex-1 overflow-auto rounded-xl border border-slate-200 dark:border-slate-800">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead class="sticky top-0 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase text-[10px] tracking-wider z-10">
+            <tr>
+              <th class="p-2.5 w-8">
+                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAllRows(this.checked)" class="w-4 h-4 rounded accent-gold-500 cursor-pointer" />
+              </th>
+              <th class="p-2.5">Pt ID</th>
+              <th class="p-2.5 text-right">Easting (Y)</th>
+              <th class="p-2.5 text-right">Northing (X)</th>
+              <th class="p-2.5 text-right">Elev (Z)</th>
+              <th class="p-2.5 text-center">Act</th>
+            </tr>
+          </thead>
+          <tbody id="pointsTableBody" class="divide-y divide-slate-200 dark:divide-slate-800 font-mono"></tbody>
+        </table>
+      </div>
+    </aside>
+  </div>
+
+  <!-- TOUCH-FRIENDLY BOTTOM NAVIGATION BAR (Mobile / Tablet) -->
+  <nav id="mobileBottomNav" class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 flex items-center overflow-x-auto no-scrollbar px-1 py-1.5"></nav>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- 1. Single Point Add / Edit Modal -->
+  <div id="pointModal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-5 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="pointModalTitle" class="font-bold text-base">Insert Coordinate Point</h3>
+        <button onclick="closeModal('pointModal')" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">✕</button>
+      </div>
+      <form onsubmit="saveSinglePointForm(event)" class="space-y-3">
+        <input type="hidden" id="editPointUid" />
+        <div>
+          <label class="block text-xs font-semibold mb-1">Point ID / Beacon Name</label>
+          <input id="ptFormId" type="text" required placeholder="e.g. ZAM_101" class="w-full px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-mono" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold mb-1">Easting (Y) [m]</label>
+            <input id="ptFormY" type="number" step="0.0001" required placeholder="0.000" class="w-full px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-mono" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-1">Northing (X) [m]</label>
+            <input id="ptFormX" type="number" step="0.0001" required placeholder="0.000" class="w-full px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-mono" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold mb-1">Elevation (Z) [m]</label>
+            <input id="ptFormZ" type="number" step="0.0001" value="0.000" class="w-full px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-mono" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-1">Feature Code / Remarks</label>
+            <input id="ptFormCode" type="text" placeholder="e.g. TRIG, BM, PEG" class="w-full px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" />
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('pointModal')" class="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-slate-950 text-xs font-bold">Save Point</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Bulk File Import Modal (CSV, JSON, TXT) -->
+  <div id="importModal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-5 shadow-2xl">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-base">Import Survey Data (CSV, JSON, TXT)</h3>
+        <button onclick="closeModal('importModal')" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">✕</button>
+      </div>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+        Supports <strong>.csv</strong>, <strong>.json</strong> (array of objects), or <strong>.txt</strong> (comma, tab, or space delimited: <code class="font-mono">PtID, Easting(Y), Northing(X), Elevation(Z), Code</code>).
+      </p>
+      <div class="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-5 text-center mb-3 hover:border-gold-500 transition">
+        <input id="bulkFileInput" type="file" accept=".csv,.json,.txt" onchange="handleFileImport(event)" class="hidden" />
+        <label for="bulkFileInput" class="cursor-pointer flex flex-col items-center gap-2">
+          <svg class="w-8 h-8 text-gold-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="text-sm font-semibold">Tap to choose CSV, JSON, or TXT file</span>
+          <span class="text-[11px] text-slate-400">Processed 100% locally in your browser</span>
+        </label>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1">Or Paste Coordinate Rows Directly:</label>
+        <textarea id="pasteImportText" rows="4" placeholder="PT1, 645120.450, 8360110.220, 1245.50, PEG&#10;PT2  645185.110  8360145.890  1246.12  BM"
+                  class="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono"></textarea>
+        <div class="flex justify-end gap-2 mt-2">
+          <button onclick="closeModal('importModal')" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold">Close</button>
+          <button onclick="parseAndImportText(document.getElementById('pasteImportText').value)" class="px-4 py-2 rounded-xl bg-gold-500 text-slate-950 text-xs font-bold">Import Pasted Rows</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Export Data Modal (CSV, JSON, TXT) -->
+  <div id="exportModal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-5 shadow-2xl">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-base">Export Coordinate Database</h3>
+        <button onclick="closeModal('exportModal')" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">✕</button>
+      </div>
+      <div class="mb-4">
+        <label class="block text-xs font-semibold mb-1.5">Records to Export</label>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer text-xs">
+            <input type="radio" name="exportScope" value="all" checked class="accent-gold-500" />
+            <span>All Points (<span id="expAllCount">0</span>)</span>
+          </label>
+          <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer text-xs">
+            <input type="radio" name="exportScope" value="selected" class="accent-gold-500" />
+            <span>Selected Only (<span id="expSelCount">0</span>)</span>
+          </label>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-2.5">
+        <button onclick="exportData('csv')" class="p-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex flex-col items-center gap-1 transition">
+          <span>CSV</span>
+          <span class="text-[10px] font-normal opacity-80">.csv table</span>
+        </button>
+        <button onclick="exportData('json')" class="p-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold flex flex-col items-center gap-1 transition">
+          <span>JSON</span>
+          <span class="text-[10px] font-normal opacity-80">.json backup</span>
+        </button>
+        <button onclick="exportData('txt')" class="p-3 rounded-xl bg-gold-500 hover:bg-gold-400 text-slate-950 text-xs font-bold flex flex-col items-center gap-1 transition">
+          <span>TXT</span>
+          <span class="text-[10px] font-normal opacity-80">ASCII text</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Booking Sheet / Report Modal (Traverse & Levelling) -->
+  <div id="bookingModal" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl">
+      <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800">
+        <h3 id="bookingModalTitle" class="font-bold text-base">Field Booking &amp; Computation Sheet</h3>
+        <div class="flex items-center gap-2">
+          <button onclick="window.print()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold hover:bg-slate-200">Print / PDF</button>
+          <button onclick="exportBookingCSV()" class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-500">Export CSV</button>
+          <button id="saveBookingPointsBtn" onclick="saveBookingPointsToDB()" class="px-3 py-1.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-bold hover:bg-gold-400">Save to Table</button>
+          <button onclick="closeModal('bookingModal')" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">✕</button>
+        </div>
+      </div>
+      <div id="printArea" class="p-4 sm:p-6 overflow-auto flex-1 text-xs space-y-4"></div>
+    </div>
+  </div>
+
+  <!-- 5. About / Geodetic Reference Modal -->
+  <div id="aboutModal" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-base text-gold-500">Kaypan GeoSystems — Geodetic Engine</h3>
+        <button onclick="closeModal('aboutModal')" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">✕</button>
+      </div>
+      <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+        Engineered for professional land surveyors and civil/geodetic engineers. Runs 100% offline as a Progressive Web App with automatic local browser storage.
+      </p>
+      <ul class="text-xs space-y-1.5 text-slate-600 dark:text-slate-300 font-mono bg-slate-100 dark:bg-slate-800 p-3 rounded-xl">
+        <li>• Ellipsoids: Clarke 1880 Modified (a=6378249.14533) &amp; WGS84</li>
+        <li>• Angular Input: D.MMSS (e.g. 125.3045 = 125° 30' 45")</li>
+        <li>• Survey Convention: Y = Easting, X = Northing</li>
+        <li>• Adjustments: Bowditch Rule, 2D Helmert Conformal, Tienstra</li>
+      </ul>
+      <div class="flex justify-between items-center pt-2">
+        <a href="https://kaypangeosystems.com" target="_blank" rel="noopener" class="text-xs text-cyan-500 hover:underline font-medium">Visit kaypangeosystems.com ↗</a>
+        <button onclick="closeModal('aboutModal')" class="px-4 py-2 rounded-xl bg-gold-500 text-slate-950 text-xs font-bold">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT CORE & ENGINES ==================== -->
+  <script>
+    /* =========================================================================
+       1. PWA MANIFEST & OFFLINE SERVICE WORKER REGISTRATION
+       ========================================================================= */
+    (function initPWA() {
+      const manifest = {
+        name: "Kaypan GeoSystems — Survey & Geodetic Hub",
+        short_name: "Kaypan Geo",
+        start_url: "./",
+        display: "standalone",
+        background_color: "#0f172a",
+        theme_color: "#0f172a",
+        description: "Offline-first Geodetic, COGO, Traversing, Earthworks & Levelling PWA",
+        icons: [
+          {
+            src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%230f172a'/%3E%3Ccircle cx='96' cy='96' r='62' fill='none' stroke='%23c2a172' stroke-width='10'/%3E%3Cline x1='96' y1='18' x2='96' y2='174' stroke='%23c2a172' stroke-width='8'/%3E%3Cline x1='18' y1='96' x2='174' y2='96' stroke='%23c2a172' stroke-width='8'/%3E%3Ccircle cx='96' cy='96' r='18' fill='%23c2a172'/%3E%3C/svg%3E",
+            sizes: "192x192",
+            type: "image/svg+xml"
+          }
+        ]
+      };
+      const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+      const manifestUrl = URL.createObjectURL(manifestBlob);
+      const link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = manifestUrl;
+      document.head.appendChild(link);
+
+      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+        const swCode = `
+          const CACHE_NAME = 'kaypan-geosystems-v1';
+          self.addEventListener('install', e => { self.skipWaiting(); });
+          self.addEventListener('activate', e => { e.waitUntil(clients.claim()); });
+          self.addEventListener('fetch', e => {
+            e.respondWith(
+              caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
+                const clone = res.clone();
+                caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+                return res;
+              }).catch(() => cached))
+            );
+          });
+        `;
+        const swBlob = new Blob([swCode], { type: 'application/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+      }
+    })();
+
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const btn = document.getElementById('pwaInstallBtn');
+      if (btn) { btn.classList.remove('hidden'); btn.classList.add('flex'); }
+    });
+    function installPWA() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => {
+        deferredPrompt = null;
+        document.getElementById('pwaInstallBtn').classList.add('hidden');
+      });
+    }
+
+    /* =========================================================================
+       2. EXACT MATHEMATICAL ENGINES (From Attached JS Files + Extended Modules)
+       ========================================================================= */
+
+    // --- GEODETIC ENGINE (geodetic-engine.js) ---
+    const GeodeticEngine = {
+      ellipsoids: {
+        clarke1880: {
+          a: 6378249.14533,
+          b: 6356514.96672,
+          esq: 0.006803511283,
+          A: 6367386.6437, B: 16300.696, C: 17.387, D: 0.023
+        },
+        wgs84: {
+          a: 6378137.0,
+          b: 6356752.314,
+          esq: 0.006694380,
+          A: 6367449.146, B: 16038.509, C: 16.833, D: 0.022
+        }
+      },
+      gridToGeog: function(y, x, y0, x0, k0, lambda0Rad, ellipName = 'clarke1880') {
+        const ellip = this.ellipsoids[ellipName];
+        let mf = (x - x0) / k0;
+        let fi = mf / ellip.A;
+        let dfi, mp, iter = 0;
+        do {
+          mp = (ellip.A * fi - ellip.B * Math.sin(2 * fi) + ellip.C * Math.sin(4 * fi) - ellip.D * Math.sin(6 * fi));
+          dfi = (mf - mp) / (ellip.A - 2 * ellip.B * Math.cos(2 * fi));
+          fi += dfi;
+          iter++;
+        } while (Math.abs(dfi) > 1e-12 && iter < 50);
+
+        let nu = ellip.a / Math.sqrt(1 - ellip.esq * Math.pow(Math.sin(fi), 2));
+        let h = (y - y0) / (k0 * nu);
+        let eta2 = (ellip.esq * Math.pow(Math.cos(fi), 2)) / (1 - ellip.esq);
+        let t2 = Math.pow(Math.tan(fi), 2);
+
+        let lambda = lambda0Rad + (1 / Math.cos(fi)) * (h - (Math.pow(h, 3) / 6) * (1 + 2 * t2 + eta2));
+        let finalFi = fi - (1 + eta2) * Math.tan(fi) * ((Math.pow(h, 2) / 2) - (Math.pow(h, 4) / 24) * (5 + 3 * t2));
+
+        return { lat: finalFi * (180 / Math.PI), lon: lambda * (180 / Math.PI) };
+      },
+      geogToGrid: function(lat, lon, y0, x0, k0, lambda0Deg, ellipName = 'wgs84') {
+        const ellip = this.ellipsoids[ellipName];
+        let fi = lat * (Math.PI / 180);
+        let lambda = lon * (Math.PI / 180);
+        let lambda0 = lambda0Deg * (Math.PI / 180);
+
+        let j = (lambda - lambda0) * Math.cos(fi);
+        let eta2 = (ellip.esq * Math.pow(Math.cos(fi), 2)) / (1 - ellip.esq);
+        let t2 = Math.pow(Math.tan(fi), 2);
+        let mp = (ellip.A * fi - ellip.B * Math.sin(2 * fi) + ellip.C * Math.sin(4 * fi) - ellip.D * Math.sin(6 * fi));
+        let nu = ellip.a / Math.sqrt(1 - ellip.esq * Math.pow(Math.sin(fi), 2));
+
+        let y = y0 + (k0 * nu) * (j + (Math.pow(j, 3) / 6) * (1 - t2 + eta2));
+        let x = x0 + k0 * mp + (k0 * nu * Math.tan(fi)) * (Math.pow(j, 2) / 2);
+
+        return { y, x };
+      },
+      transformDatum: function(g, fromDatum, toDatum) {
+        if (fromDatum === toDatum) return { lat: g.lat, lon: g.lon };
+        let dx = -136.0, dy = -108.0, dz = -292.0; // Cape -> WGS84
+        if (fromDatum === 'WGS84' && toDatum === 'Cape') {
+          dx = 136.0; dy = 108.0; dz = 292.0;
+        }
+        const latRad = g.lat * (Math.PI / 180);
+        const lonRad = g.lon * (Math.PI / 180);
+        const a = 6378137.0;
+        const esq = 0.00669438;
+        const rn = a / Math.sqrt(1 - esq * Math.pow(Math.sin(latRad), 2));
+        const rm = a * (1 - esq) / Math.pow(1 - esq * Math.pow(Math.sin(latRad), 2), 1.5);
+        const dLat = (-dx * Math.sin(latRad) * Math.cos(lonRad) - dy * Math.sin(latRad) * Math.sin(lonRad) + dz * Math.cos(latRad)) / rm;
+        const dLon = (-dx * Math.sin(lonRad) + dy * Math.cos(lonRad)) / (rn * Math.cos(latRad));
+        return {
+          lat: g.lat + dLat * (180 / Math.PI),
+          lon: g.lon + dLon * (180 / Math.PI)
+        };
+      }
+    };
+
+    // --- COGO & PROJECTION CORRECTION ENGINE (cogo-engine.js) ---
+    const COGO = {
+      dmsToDeg: function(dms) {
+        if (dms === null || dms === undefined || dms === '' || isNaN(dms)) return 0;
+        const val = parseFloat(dms);
+        const sgn = val < 0 ? -1 : 1;
+        const absDms = Math.abs(val);
+        const deg = Math.floor(absDms + 1e-9);
+        const fraction = (absDms - deg) * 100;
+        const min = Math.floor(fraction + 1e-7);
+        const sec = (fraction - min) * 100;
+        return sgn * (deg + min / 60 + sec / 3600);
+      },
+      deg2rad: (d) => (d * Math.PI) / 180,
+      rad2deg: (r) => (r * 180) / Math.PI,
+      rectangular: (dist, brg) => ({
+        y: dist * Math.sin(COGO.deg2rad(brg)),
+        x: dist * Math.cos(COGO.deg2rad(brg))
+      }),
+      polar: (dy, dx) => {
+        let a = COGO.rad2deg(Math.atan2(dy, dx));
+        return { dist: Math.sqrt(dy * dy + dx * dx), brg: a < 0 ? a + 360 : a };
+      },
+      degToDms: function(deg) {
+        const sgn = deg < 0 ? "-" : "";
+        let d = Math.abs(deg);
+        let degrees = Math.floor(d);
+        let minutes = Math.floor((d - degrees) * 60);
+        let seconds = Math.round(((d - degrees) * 60 - minutes) * 60);
+        if (seconds >= 60) { seconds = 0; minutes++; }
+        if (minutes >= 60) { minutes = 0; degrees++; }
+        const mm = String(minutes).padStart(2, '0');
+        const ss = String(seconds).padStart(2, '0');
+        return `${sgn}${degrees}°${mm}'${ss}" (${sgn}${degrees}.${mm}${ss})`;
+      },
+      degToDmsCompact: function(deg) {
+        const sgn = deg < 0 ? "-" : "";
+        let d = Math.abs(deg);
+        let degrees = Math.floor(d);
+        let minutes = Math.floor((d - degrees) * 60);
+        let seconds = Math.round(((d - degrees) * 60 - minutes) * 60);
+        if (seconds >= 60) { seconds = 0; minutes++; }
+        if (minutes >= 60) { minutes = 0; degrees++; }
+        return `${sgn}${degrees}°${String(minutes).padStart(2, '0')}'${String(seconds).padStart(2, '0')}"`;
+      }
+    };
+
+    const ProjCorrection = {
+      R_EARTH: 6378137,
+      CAPE_FT_TO_M: 0.3047972654,
+      FT_TO_M: 0.3048,
+      loScale: function(yMeanKm) {
+        return 1 + (0.01237 * Math.pow(yMeanKm, 2) * 1e-6);
+      },
+      utmScale: function(eMeanKm) {
+        const ym = eMeanKm - 500;
+        return 0.9996 * (1 + (0.01237 * Math.pow(ym, 2) * 1e-6));
+      },
+      convert: function(value, from, to) {
+        let meters;
+        if (from === 'm') meters = value;
+        else if (from === 'ft') meters = value * this.FT_TO_M;
+        else if (from === 'cft') meters = value * this.CAPE_FT_TO_M;
+        if (to === 'm') return meters;
+        if (to === 'ft') return meters / this.FT_TO_M;
+        if (to === 'cft') return meters / this.CAPE_FT_TO_M;
+        return meters;
+      }
+    };
+
+    // --- TRAVERSE ENGINE (cogo-engine.js) ---
+    const TraverseEngine = {
+      calculate: function(data) {
+        let totalDist = 0;
+        let tempPoints = [];
+        let corrPerStn = 0;
+        let angularMisclosure = 0;
+
+        // Determine forward bearing progression:
+        // If mode === 'bear', hAng is direct bearing; if mode === 'dir', hAng is clockwise angle/direction
+        if (data.isClosed && data.endBrg !== undefined && data.endBrg !== null && !isNaN(data.endBrg)) {
+          let runningBrg = data.startBrg;
+          data.stations.forEach((stn, idx) => {
+            if (data.mode === 'bear') {
+              runningBrg = COGO.dmsToDeg(stn.hAng) % 360;
+            } else {
+              // Direction/included clockwise angle deflection
+              if (idx === 0 && data.hasBacksight) {
+                runningBrg = (data.startBrg + COGO.dmsToDeg(stn.hAng)) % 360;
+              } else {
+                runningBrg = (runningBrg + 180 + COGO.dmsToDeg(stn.hAng)) % 360;
+              }
+            }
+            if (runningBrg < 0) runningBrg += 360;
+          });
+          angularMisclosure = data.endBrg - runningBrg;
+          while (angularMisclosure > 180) angularMisclosure -= 360;
+          while (angularMisclosure < -180) angularMisclosure += 360;
+          corrPerStn = angularMisclosure / data.stations.length;
+        }
+
+        let currentY = data.stnA.y;
+        let currentX = data.stnA.x;
+        let adjustedBrg = data.startBrg;
+
+        data.stations.forEach((stn, index) => {
+          let rawBrg;
+          if (data.mode === 'bear') {
+            rawBrg = COGO.dmsToDeg(stn.hAng) + corrPerStn * (index + 1);
+          } else {
+            if (index === 0 && data.hasBacksight) {
+              rawBrg = data.startBrg + COGO.dmsToDeg(stn.hAng) + corrPerStn;
+            } else if (index === 0 && !data.hasBacksight) {
+              rawBrg = data.startBrg + COGO.dmsToDeg(stn.hAng) + corrPerStn;
+            } else {
+              rawBrg = adjustedBrg + 180 + COGO.dmsToDeg(stn.hAng) + corrPerStn;
+            }
+          }
+          adjustedBrg = ((rawBrg % 360) + 360) % 360;
+
+          const dist = parseFloat(stn.dist);
+          const offset = COGO.rectangular(dist, adjustedBrg);
+          currentY += offset.y;
+          currentX += offset.x;
+          totalDist += dist;
+
+          tempPoints.push({
+            ptId: stn.ptId || `TRV_${index + 1}`,
+            obsAng: stn.hAng,
+            y: currentY,
+            x: currentX,
+            dY: offset.y,
+            dX: offset.x,
+            dist: dist,
+            brg: adjustedBrg
+          });
+        });
+
+        let misY = 0, misX = 0, linearErr = 0, accuracy = 0;
+        if (data.isClosed) {
+          const targetY = data.stnC && !isNaN(data.stnC.y) ? data.stnC.y : data.stnA.y;
+          const targetX = data.stnC && !isNaN(data.stnC.x) ? data.stnC.x : data.stnA.x;
+          misY = targetY - currentY;
+          misX = targetX - currentX;
+          linearErr = Math.sqrt(misY * misY + misX * misX);
+          accuracy = linearErr > 0 ? totalDist / linearErr : 999999;
+        }
+
+        return {
+          points: tempPoints,
+          misY,
+          misX,
+          totalDist,
+          linearErr,
+          angularMisclosure,
+          corrPerStn,
+          accuracy,
+          isClosed: data.isClosed
+        };
+      },
+      applyBowditch: function(report) {
+        if (!report.isClosed || report.totalDist === 0) return report.points.map(pt => ({ ...pt, corrY: 0, corrX: 0 }));
+        let cumDist = 0;
+        return report.points.map(pt => {
+          cumDist += pt.dist;
+          const corrY = report.misY * (cumDist / report.totalDist);
+          const corrX = report.misX * (cumDist / report.totalDist);
+          return {
+            ...pt,
+            corrY,
+            corrX,
+            y: pt.y + corrY,
+            x: pt.x + corrX
+          };
+        });
+      }
+    };
+
+    // --- HELMERT 2D ENGINE (cogo-engine.js) ---
+    const HelmertEngine = {
+      calculateParameters: function(pairs) {
+        let n = pairs.length;
+        if (n < 2) return null;
+        let s1 = 0, s2 = 0, s3 = 0, s4 = 0, s5 = 0, s6 = 0, s8 = 0, s9 = 0, s7 = 0, a_sum = 0, b_sum = 0;
+        const x1 = pairs[0].oldX;
+        const y1 = pairs[0].oldY;
+
+        pairs.forEach(p => {
+          s1 += p.oldX;
+          s2 += p.oldX - x1;
+          s3 += p.oldY;
+          s4 += p.oldY - y1;
+          s5 += p.newX;
+          s6 += p.newX - x1;
+          s8 += p.newY;
+          s9 += p.newY - y1;
+          s7 += Math.pow(p.newX - x1, 2) + Math.pow(p.newY - y1, 2);
+          a_sum += (p.oldX - x1) * (p.newX - x1) + (p.oldY - y1) * (p.newY - y1);
+          b_sum += (p.oldX - x1) * (p.newY - y1) - (p.oldY - y1) * (p.newX - x1);
+        });
+
+        const tmp = 1 / n;
+        const denom = s7 - (s6 * s6 * tmp + s9 * s9 * tmp);
+        if (Math.abs(denom) < 1e-12) return null;
+        const a = (a_sum - (s6 * s2 * tmp + s9 * s4 * tmp)) / denom;
+        const b = (b_sum - (s9 * s2 * tmp) + (s6 * s4 * tmp)) / denom;
+        const x0 = (s1 - s5 * a - s8 * b) / n;
+        const y0 = (s3 - s8 * a + b * s5) / n;
+        const scale = Math.sqrt(a * a + b * b);
+        const rotation = Math.atan2(b, a) * (180 / Math.PI);
+
+        return { a, b, x0, y0, scale, rotation };
+      },
+      transformPoint: function(ptax, ptay, params) {
+        const x = ptay * params.b + ptax * params.a + params.x0;
+        const y = params.y0 + params.a * ptay - params.b * ptax;
+        return { x, y };
+      },
+      calculateStandardError: function(pairs, params) {
+        let sumSquares = 0;
+        let n = pairs.length;
+        if (n < 3) return 0;
+        pairs.forEach(p => {
+          const calc = this.transformPoint(p.oldX, p.oldY, params);
+          const dx = calc.x - p.newX;
+          const dy = calc.y - p.newY;
+          sumSquares += (dx * dx) + (dy * dy);
+        });
+        return Math.sqrt(sumSquares / (2 * (n - 2)));
+      }
+    };
+
+    // --- AREA ENGINE (cogo-engine.js) ---
+    function calculateArea(points) {
+      if (points.length < 3) return { area: 0, perimeter: 0 };
+      let area = 0;
+      let perimeter = 0;
+      let j = points.length - 1;
+      for (let i = 0; i < points.length; i++) {
+        area += (points[j].x + points[i].x) * (points[j].y - points[i].y);
+        const dy = points[i].y - points[j].y;
+        const dx = points[i].x - points[j].x;
+        perimeter += Math.sqrt(dy * dy + dx * dx);
+        j = i;
+      }
+      return { area: Math.abs(area / 2.0), perimeter };
+    }
+
+    /* =========================================================================
+       3. LOCAL STORAGE PERSISTENCE & COORDINATE DATABASE
+       ========================================================================= */
+    const STORAGE_KEYS = {
+      POINTS: 'kaypan_geo_points_v1',
+      THEME: 'kaypan_geo_theme_v1',
+      TRAVERSE: 'kaypan_geo_traverse_v1',
+      HELMERT_PAIRS: 'kaypan_geo_helmert_pairs_v1',
+      HELMERT_PARAMS: 'kaypan_geo_helmert_params_v1',
+      LEVELLING: 'kaypan_geo_levelling_v1',
+      EARTHWORKS: 'kaypan_geo_earthworks_v1'
+    };
+
+    let appState = {
+      points: [],
+      selectedUids: new Set(),
+      activeGroup: 'cogo',
+      activeSub: 'r_be',
+      pickTarget: 'stn', // stn, bs, cy, ptA, ptB, ptC, old, new, area
+      traverseLegs: [],
+      helmertPairs: [],
+      helmertParams: { a: 1, b: 0, x0: 0, y0: 0, scale: 1, rotation: 0 },
+      areaVertices: [],
+      levellingRows: [],
+      earthworkSections: [],
+      lastBookingExport: null
+    };
+
+    const SAMPLE_POINTS = [
+      { uid: 's1', pt_no: 'ZAM_101', easting: 645120.450, northing: 8360110.220, elevation: 1245.500, code: 'TRIG' },
+      { uid: 's2', pt_no: 'ZAM_102', easting: 645385.110, northing: 8360445.890, elevation: 1248.120, code: 'TRIG' },
+      { uid: 's3', pt_no: 'ZAM_103', easting: 645790.340, northing: 8360290.650, elevation: 1242.880, code: 'BM' },
+      { uid: 's4', pt_no: 'PEG_01', easting: 645210.000, northing: 8360200.000, elevation: 1246.050, code: 'BOUNDARY' },
+      { uid: 's5', pt_no: 'PEG_02', easting: 645310.000, northing: 8360200.000, elevation: 1246.420, code: 'BOUNDARY' },
+      { uid: 's6', pt_no: 'PEG_03', easting: 645310.000, northing: 8360320.000, elevation: 1247.100, code: 'BOUNDARY' },
+      { uid: 's7', pt_no: 'PEG_04', easting: 645210.000, northing: 8360320.000, elevation: 1246.850, code: 'BOUNDARY' },
+      { uid: 's8', pt_no: 'LO31_A', easting: -54210.345, northing: 1658920.112, elevation: 1280.400, code: 'LO31' }
+    ];
+
+    function loadPersistedData() {
+      try {
+        const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
+        if (savedTheme === 'light') document.documentElement.classList.remove('dark');
+        else document.documentElement.classList.add('dark');
+
+        const savedPts = localStorage.getItem(STORAGE_KEYS.POINTS);
+        if (savedPts) {
+          appState.points = JSON.parse(savedPts);
+        } else {
+          appState.points = JSON.parse(JSON.stringify(SAMPLE_POINTS));
+          savePointsToStorage();
+        }
+
+        const savedTrv = localStorage.getItem(STORAGE_KEYS.TRAVERSE);
+        if (savedTrv) appState.traverseLegs = JSON.parse(savedTrv);
+
+        const savedPairs = localStorage.getItem(STORAGE_KEYS.HELMERT_PAIRS);
+        if (savedPairs) appState.helmertPairs = JSON.parse(savedPairs);
+
+        const savedParams = localStorage.getItem(STORAGE_KEYS.HELMERT_PARAMS);
+        if (savedParams) appState.helmertParams = JSON.parse(savedParams);
+
+        const savedLvl = localStorage.getItem(STORAGE_KEYS.LEVELLING);
+        if (savedLvl) {
+          appState.levellingRows = JSON.parse(savedLvl);
+        } else {
+          appState.levellingRows = [
+            { stn: 'ZAM_101', bs: '1.452', is: '', fs: '', remarks: 'TBM Start (RL 1245.500)' },
+            { stn: 'TP_01', bs: '', is: '1.890', fs: '', remarks: 'Centerline Ch 0+020' },
+            { stn: 'CP_01', bs: '2.115', is: '', fs: '0.945', remarks: 'Change Point 1' },
+            { stn: 'TP_02', bs: '', is: '1.620', fs: '', remarks: 'Culvert Invert' },
+            { stn: 'ZAM_102', bs: '', is: '', fs: '1.210', remarks: 'Closing BM' }
+          ];
+        }
+
+        const savedEarth = localStorage.getItem(STORAGE_KEYS.EARTHWORKS);
+        if (savedEarth) {
+          appState.earthworkSections = JSON.parse(savedEarth);
+        } else {
+          appState.earthworkSections = [
+            { chainage: 0, area: 14.50, type: 'Cut' },
+            { chainage: 20, area: 22.80, type: 'Cut' },
+            { chainage: 40, area: 18.20, type: 'Cut' }
+          ];
+        }
+      } catch (e) {
+        console.error('Storage read error:', e);
+      }
+    }
+
+    function savePointsToStorage() {
+      localStorage.setItem(STORAGE_KEYS.POINTS, JSON.stringify(appState.points));
+      renderPointsTable();
+    }
+
+    function saveModuleState() {
+      localStorage.setItem(STORAGE_KEYS.TRAVERSE, JSON.stringify(appState.traverseLegs));
+      localStorage.setItem(STORAGE_KEYS.HELMERT_PAIRS, JSON.stringify(appState.helmertPairs));
+      localStorage.setItem(STORAGE_KEYS.HELMERT_PARAMS, JSON.stringify(appState.helmertParams));
+      localStorage.setItem(STORAGE_KEYS.LEVELLING, JSON.stringify(appState.levellingRows));
+      localStorage.setItem(STORAGE_KEYS.EARTHWORKS, JSON.stringify(appState.earthworkSections));
+    }
+
+    function setStatus(msg) {
+      const el = document.getElementById('statusText');
+      if (el) el.textContent = msg;
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem(STORAGE_KEYS.THEME, isDark ? 'dark' : 'light');
+      document.getElementById('metaThemeColor').setAttribute('content', isDark ? '#0f172a' : '#f8fafc');
+      setStatus(`Switched to ${isDark ? 'Dark' : 'Light'} Mode`);
+    }
+
+    /* =========================================================================
+       4. TABLE MANAGEMENT, MULTI-ROW SELECTION & IMPORT/EXPORT
+       ========================================================================= */
+    function renderPointsTable() {
+      const tbody = document.getElementById('pointsTableBody');
+      const search = (document.getElementById('dbSearchInput')?.value || '').toLowerCase().trim();
+      const filtered = appState.points.filter(p =>
+        p.pt_no.toLowerCase().includes(search) ||
+        String(p.easting).includes(search) ||
+        String(p.northing).includes(search) ||
+        (p.code || '').toLowerCase().includes(search)
+      );
+
+      document.getElementById('ptCountBadge').textContent = `${appState.points.length} pts`;
+      document.getElementById('mobilePtCount').textContent = appState.points.length;
+      document.getElementById('expAllCount').textContent = appState.points.length;
+      document.getElementById('expSelCount').textContent = appState.selectedUids.size;
+      document.getElementById('selectedCount').textContent = appState.selectedUids.size;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400 font-sans">No matching points. Add a point or import a file.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(pt => {
+        const isChecked = appState.selectedUids.has(pt.uid);
+        return `
+          <tr onclick="handleTableRowClick('${pt.uid}')"
+              class="cursor-pointer transition ${isChecked ? 'bg-gold-500/15 dark:bg-gold-500/20' : 'hover:bg-slate-100/80 dark:hover:bg-slate-800/70'}">
+            <td class="p-2.5" onclick="event.stopPropagation()">
+              <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleRowCheckbox('${pt.uid}', this.checked)"
+                     class="w-4 h-4 rounded accent-gold-500 cursor-pointer" />
+            </td>
+            <td class="p-2.5 font-semibold text-slate-900 dark:text-slate-100">
+              <div>${escapeHtml(pt.pt_no)}</div>
+              ${pt.code ? `<div class="text-[10px] text-slate-400 font-sans">${escapeHtml(pt.code)}</div>` : ''}
+            </td>
+            <td class="p-2.5 text-right">${Number(pt.easting).toFixed(3)}</td>
+            <td class="p-2.5 text-right">${Number(pt.northing).toFixed(3)}</td>
+            <td class="p-2.5 text-right text-slate-500 dark:text-slate-400">${Number(pt.elevation || 0).toFixed(3)}</td>
+            <td class="p-2.5 text-center" onclick="event.stopPropagation()">
+              <div class="inline-flex items-center gap-1">
+                <button onclick="openEditPointModal('${pt.uid}')" title="Edit" class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-cyan-500">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button onclick="deleteSinglePoint('${pt.uid}')" title="Delete" class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-rose-500">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function toggleRowCheckbox(uid, checked) {
+      if (checked) appState.selectedUids.add(uid);
+      else appState.selectedUids.delete(uid);
+      renderPointsTable();
+    }
+
+    function toggleSelectAllRows(checked) {
+      if (checked) appState.points.forEach(p => appState.selectedUids.add(p.uid));
+      else appState.selectedUids.clear();
+      renderPointsTable();
+    }
+
+    function deleteSinglePoint(uid) {
+      appState.points = appState.points.filter(p => p.uid !== uid);
+      appState.selectedUids.delete(uid);
+      savePointsToStorage();
+      setStatus('Point removed from local database.');
+    }
+
+    function deleteSelectedPoints() {
+      if (appState.selectedUids.size === 0) {
+        setStatus('Select one or more rows first.');
+        return;
+      }
+      const count = appState.selectedUids.size;
+      appState.points = appState.points.filter(p => !appState.selectedUids.has(p.uid));
+      appState.selectedUids.clear();
+      document.getElementById('selectAllCheckbox').checked = false;
+      savePointsToStorage();
+      setStatus(`Deleted ${count} selected point(s).`);
+    }
+
+    function addPointToDB(pt_no, easting, northing, elevation = 0, code = '') {
+      const uid = 'pt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      appState.points.push({
+        uid,
+        pt_no: String(pt_no || `PT_${appState.points.length + 1}`),
+        easting: parseFloat(Number(easting).toFixed(4)),
+        northing: parseFloat(Number(northing).toFixed(4)),
+        elevation: parseFloat(Number(elevation || 0).toFixed(4)),
+        code: String(code || '')
+      });
+      savePointsToStorage();
+    }
+
+    function openSinglePointModal() {
+      document.getElementById('pointModalTitle').textContent = 'Insert Coordinate Point';
+      document.getElementById('editPointUid').value = '';
+      document.getElementById('ptFormId').value = `PT_${appState.points.length + 1}`;
+      document.getElementById('ptFormY').value = '';
+      document.getElementById('ptFormX').value = '';
+      document.getElementById('ptFormZ').value = '0.000';
+      document.getElementById('ptFormCode').value = '';
+      openModal('pointModal');
+    }
+
+    function openEditPointModal(uid) {
+      const pt = appState.points.find(p => p.uid === uid);
+      if (!pt) return;
+      document.getElementById('pointModalTitle').textContent = `Edit Point: ${pt.pt_no}`;
+      document.getElementById('editPointUid').value = pt.uid;
+      document.getElementById('ptFormId').value = pt.pt_no;
+      document.getElementById('ptFormY').value = pt.easting;
+      document.getElementById('ptFormX').value = pt.northing;
+      document.getElementById('ptFormZ').value = pt.elevation || 0;
+      document.getElementById('ptFormCode').value = pt.code || '';
+      openModal('pointModal');
+    }
+
+    function saveSinglePointForm(e) {
+      e.preventDefault();
+      const uid = document.getElementById('editPointUid').value;
+      const pt_no = document.getElementById('ptFormId').value.trim();
+      const easting = parseFloat(document.getElementById('ptFormY').value);
+      const northing = parseFloat(document.getElementById('ptFormX').value);
+      const elevation = parseFloat(document.getElementById('ptFormZ').value) || 0;
+      const code = document.getElementById('ptFormCode').value.trim();
+
+      if (uid) {
+        const idx = appState.points.findIndex(p => p.uid === uid);
+        if (idx !== -1) {
+          appState.points[idx] = { ...appState.points[idx], pt_no, easting, northing, elevation, code };
+          savePointsToStorage();
+          setStatus(`Updated point ${pt_no}`);
+        }
+      } else {
+        addPointToDB(pt_no, easting, northing, elevation, code);
+        setStatus(`Added point ${pt_no} to local storage`);
+      }
+      closeModal('pointModal');
+    }
+
+    function loadSampleData() {
+      const existingIds = new Set(appState.points.map(p => p.pt_no));
+      let added = 0;
+      SAMPLE_POINTS.forEach(sp => {
+        if (!existingIds.has(sp.pt_no)) {
+          addPointToDB(sp.pt_no, sp.easting, sp.northing, sp.elevation, sp.code);
+          added++;
+        }
+      });
+      setStatus(added > 0 ? `Loaded ${added} sample survey points.` : 'Sample points already exist in table.');
+    }
+
+    // Handle clicking a row in the table to populate active calculator fields
+    function setPickTarget(target) {
+      appState.pickTarget = target;
+      document.querySelectorAll('.pick-btn').forEach(b => {
+        b.classList.remove('bg-gold-500', 'text-slate-950', 'font-bold');
+        b.classList.add('bg-slate-100', 'dark:bg-slate-800');
+      });
+      const activeBtn = document.getElementById(`pick_${target}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-slate-100', 'dark:bg-slate-800');
+        activeBtn.classList.add('bg-gold-500', 'text-slate-950', 'font-bold');
+      }
+      setStatus(`Tap any row in Coordinate Table to populate [${target.toUpperCase()}]`);
+    }
+
+    let tempHelmertOld = null;
+    function handleTableRowClick(uid) {
+      const pt = appState.points.find(p => p.uid === uid);
+      if (!pt) return;
+
+      // If in Area module, append vertex directly
+      if (appState.activeGroup === 'area') {
+        appState.areaVertices.push({ id: pt.pt_no, y: pt.easting, x: pt.northing });
+        renderCalculator();
+        setStatus(`Added ${pt.pt_no} to Area boundary (${appState.areaVertices.length} vertices)`);
+        return;
+      }
+
+      // If in Helmert control pairing
+      if (appState.activeGroup === 'transform' && appState.activeSub === 'helm_pts') {
+        if (appState.pickTarget === 'old') {
+          tempHelmertOld = { name: pt.pt_no, y: pt.easting, x: pt.northing };
+          setPickTarget('new');
+          setStatus(`Old Local [${pt.pt_no}] picked. Now tap New Grid control point.`);
+        } else if (tempHelmertOld) {
+          appState.helmertPairs.push({
+            label: `${tempHelmertOld.name} → ${pt.pt_no}`,
+            oldY: tempHelmertOld.y,
+            oldX: tempHelmertOld.x,
+            newY: pt.easting,
+            newX: pt.northing
+          });
+          tempHelmertOld = null;
+          saveModuleState();
+          setPickTarget('old');
+          renderCalculator();
+          setStatus(`Control pair added (${appState.helmertPairs.length} total).`);
+        }
+        return;
+      }
+
+      // Standard input field population
+      const t = appState.pickTarget;
+      const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+
+      if (t === 'stn') {
+        setVal('stn_y', pt.easting);
+        setVal('stn_x', pt.northing);
+        if (document.getElementById('bs_y')) setPickTarget('bs');
+      } else if (t === 'bs') {
+        setVal('bs_y', pt.easting);
+        setVal('bs_x', pt.northing);
+        if (document.getElementById('cy_y')) setPickTarget('cy');
+      } else if (t === 'cy') {
+        setVal('cy_y', pt.easting);
+        setVal('cy_x', pt.northing);
+      } else if (t === 'ptA') {
+        setVal('ay', pt.easting);
+        setVal('ax', pt.northing);
+        if (document.getElementById('by')) setPickTarget('ptB');
+      } else if (t === 'ptB') {
+        setVal('by', pt.easting);
+        setVal('bx', pt.northing);
+        if (document.getElementById('cy')) setPickTarget('ptC');
+      } else if (t === 'ptC') {
+        setVal('cy', pt.easting);
+        setVal('cx', pt.northing);
+      }
+
+      setStatus(`Loaded ${pt.pt_no} (Y: ${pt.easting.toFixed(3)}, X: ${pt.northing.toFixed(3)})`);
+      if (window.innerWidth < 1024) {
+        const drawer = document.getElementById('dbPanel');
+        if (!drawer.classList.contains('hidden')) toggleMobileDbDrawer();
+      }
+    }
+
+    // Bulk Send Selected Rows to Active Tools
+    function getSelectedPointsList() {
+      return appState.points.filter(p => appState.selectedUids.has(p.uid));
+    }
+
+    function sendSelectedToArea() {
+      const sel = getSelectedPointsList();
+      if (sel.length < 3) {
+        setStatus('Select at least 3 rows in the table to compute Area.');
+        return;
+      }
+      appState.areaVertices = sel.map(p => ({ id: p.pt_no, y: p.easting, x: p.northing }));
+      selectModule('area', 'area_calc');
+      setStatus(`Loaded ${sel.length} selected points into Area Calculator.`);
+    }
+
+    function sendSelectedToTraverse() {
+      const sel = getSelectedPointsList();
+      if (sel.length === 0) {
+        setStatus('Select rows first to populate Traverse control stations.');
+        return;
+      }
+      selectModule('traverse', 'cld_di');
+      setTimeout(() => {
+        if (sel[0]) { document.getElementById('stn_y').value = sel[0].easting; document.getElementById('stn_x').value = sel[0].northing; }
+        if (sel[1]) { document.getElementById('bs_y').value = sel[1].easting; document.getElementById('bs_x').value = sel[1].northing; }
+        if (sel[2]) { document.getElementById('cy_y').value = sel[2].easting; document.getElementById('cy_x').value = sel[2].northing; }
+        setStatus(`Populated Traverse control points from ${sel.length} selected row(s).`);
+      }, 30);
+    }
+
+    function batchHelmertTransformSelected() {
+      const sel = getSelectedPointsList();
+      if (sel.length === 0) {
+        setStatus('Select points to transform with active Helmert parameters.');
+        return;
+      }
+      const p = appState.helmertParams;
+      sel.forEach(pt => {
+        const res = HelmertEngine.transformPoint(pt.northing, pt.easting, p);
+        addPointToDB(`${pt.pt_no}_TF`, res.y, res.x, pt.elevation, 'HELMERT');
+      });
+      setStatus(`Transformed ${sel.length} point(s) using active Helmert parameters.`);
+    }
+
+    // --- IMPORT / EXPORT (CSV, JSON, TXT) ---
+    function handleFileImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const content = e.target.result;
+        if (file.name.toLowerCase().endsWith('.json')) {
+          importJSONContent(content);
+        } else {
+          parseAndImportText(content);
+        }
+        event.target.value = '';
+      };
+      reader.readAsText(file);
+    }
+
+    function importJSONContent(raw) {
+      try {
+        const arr = JSON.parse(raw);
+        if (!Array.isArray(arr)) throw new Error('JSON must be an array of point objects');
+        let count = 0;
+        arr.forEach(item => {
+          const id = item.pt_no || item.id || item.name || item.PointID || `PT_${appState.points.length + 1}`;
+          const y = parseFloat(item.easting ?? item.y ?? item.Y ?? item.Easting);
+          const x = parseFloat(item.northing ?? item.x ?? item.X ?? item.Northing);
+          const z = parseFloat(item.elevation ?? item.z ?? item.Z ?? item.Elevation ?? 0) || 0;
+          const code = item.code || item.remarks || item.Code || '';
+          if (!isNaN(y) && !isNaN(x)) {
+            addPointToDB(id, y, x, z, code);
+            count++;
+          }
+        });
+        closeModal('importModal');
+        setStatus(`Imported ${count} points from JSON file.`);
+      } catch (err) {
+        setStatus(`JSON Import Error: ${err.message}`);
+      }
+    }
+
+    function parseAndImportText(text) {
+      if (!text || !text.trim()) return;
+      const lines = text.split(/\r?\n/);
+      let count = 0;
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        const cols = trimmed.includes(',') ? trimmed.split(',') : trimmed.split(/\s+/);
+        if (cols.length < 3) return;
+        const pt_no = cols[0].replace(/^["']|["']$/g, '').trim();
+        const y = parseFloat(cols[1]);
+        const x = parseFloat(cols[2]);
+        const z = parseFloat(cols[3]) || 0;
+        const code = cols.slice(4).join(' ').replace(/^["']|["']$/g, '').trim();
+        if (pt_no && !isNaN(y) && !isNaN(x)) {
+          if (['pt_no', 'point', 'ptid', 'id'].includes(pt_no.toLowerCase())) return;
+          addPointToDB(pt_no, y, x, z, code);
+          count++;
+        }
+      });
+      closeModal('importModal');
+      setStatus(`Imported ${count} survey points into local database.`);
+    }
+
+    function exportData(format) {
+      const scope = document.querySelector('input[name="exportScope"]:checked')?.value || 'all';
+      const list = scope === 'selected' ? getSelectedPointsList() : appState.points;
+      if (list.length === 0) {
+        setStatus('No points available to export.');
+        return;
+      }
+      const dateStr = new Date().toISOString().split('T')[0];
+      let content = '', mime = 'text/plain;charset=utf-8;', filename = `KaypanGeo_${dateStr}.${format}`;
+
+      if (format === 'csv') {
+        content = 'PointID,Easting_Y,Northing_X,Elevation_Z,Code\n' +
+          list.map(p => `"${p.pt_no}",${Number(p.easting).toFixed(4)},${Number(p.northing).toFixed(4)},${Number(p.elevation || 0).toFixed(4)},"${p.code || ''}"`).join('\n');
+        mime = 'text/csv;charset=utf-8;';
+      } else if (format === 'json') {
+        content = JSON.stringify(list.map(({ pt_no, easting, northing, elevation, code }) => ({
+          pt_no, easting, northing, elevation, code
+        })), null, 2);
+        mime = 'application/json;charset=utf-8;';
+      } else {
+        content = 'PointID\tEasting(Y)\tNorthing(X)\tElevation(Z)\tCode\n' +
+          list.map(p => `${p.pt_no}\t${Number(p.easting).toFixed(4)}\t${Number(p.northing).toFixed(4)}\t${Number(p.elevation || 0).toFixed(4)}\t${p.code || ''}`).join('\n');
+      }
+
+      downloadBlob(content, filename, mime);
+      closeModal('exportModal');
+      setStatus(`Exported ${list.length} points as ${filename}`);
+    }
+
+    function downloadBlob(content, filename, mime) {
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    /* =========================================================================
+       5. NAVIGATION ARCHITECTURE (8 GROUPED MODULES + TOUCH ICONS)
+       ========================================================================= */
+    const MODULES = [
+      {
+        id: 'cogo',
+        label: '1. COGO',
+        short: 'COGO',
+        icon: `<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M12 12l4-4" stroke-linecap="round"/></svg>`,
+        subs: [
+          { id: 'r_be', label: 'Radiation (Bearing)' },
+          { id: 'r_di', label: 'Radiation (Direction)' },
+          { id: 'r_ecc', label: 'Eccentric Radiation' },
+          { id: 'res_dir', label: 'Resection (Direction)' },
+          { id: 'res_dist', label: 'Resection (Distance)' },
+          { id: 'inter_be', label: 'Intersection (Bearing)' },
+          { id: 'inter_di', label: 'Intersection (Direction)' }
+        ]
+      },
+      {
+        id: 'traverse',
+        label: '2. Traversing',
+        short: 'Traverse',
+        icon: `<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 17 9 11 13 15 21 7"/><circle cx="3" cy="17" r="2"/><circle cx="9" cy="11" r="2"/><circle cx="13" cy="15" r="2"/><circle cx="21" cy="7" r="2"/></svg>`,
+        subs: [
+          { id: 'cld_loop_be', label: 'Closed Loop (Bearing)' },
+          { id: 'cld_loop_di', label: 'Closed Loop (Direction)' },
+          { id: 'cld_link_be', label: 'Closed Link (Bearing)' },
+          { id: 'cld_di', label: 'Closed Link (Direction)' },
+          { id: 'u_be', label: 'Open / Unclosed (Bearing)' },
+          { id: 'u_di', label: 'Open / Unclosed (Direction)' }
+        ]
+      },
+      {
+        id: 'transform',
+        label: '3. Transformations',
+        short: 'Transform',
+        icon: `<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3l4 4-4 4M3 11V9a4 4 0 014-4h14M7 21l-4-4 4-4M21 13v2a4 4 0 01-4 4H3" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        subs: [
+          { id: 'helm_pts', label: 'Helmert Control Pairs' },
+          { id: 'helm_param', label: 'Helmert Parameters' },
+          { id: 'losca', label: 'Lo Scale Factor (LOSca)' },
+          { id: 'utmsca', label: 'UTM Scale Factor (UTMSca)' },
+          { id: 'slopesea', label: 'Slope & Sea Level' }
+        ]
+      },
+      {
+        id: 'conversions',
+        label: '4. Conversions',
+        short: 'Convert',
+        icon: `<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>`,
+        subs: [
+          { id: 'lo_utm', label: 'Lo → UTM' },
+          { id: 'utm_lo', label: 'UTM → Lo' },
+          { id: 'geo_utm', label: 'Geo ↔ UTM / Lo' },
+          { id: 'dms_dec', label: 'DMS ↔ Decimal' },
+          { id: 'units', label: 'Length Units' }
+        ]
+      },
+      {
+        id: 'earthworks',
+        label: '5. Earthworks Vol',
+        short: 'Volumes',
+        icon: `<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l4-8 5 4 4-6 5 10H3z" stroke-linejoin="round"/></svg>`,
+        subs: [
+          { id: 'ew_level', label: 'Level Section' },
+          { id: 'ew_two', label: 'Two-Level Section' },
+          { id: 'ew_three', label: 'Three-Level Section' },
+          { id: 'ew_sidehill', label: 'Side-Hill Two-Level' },
+          { id: 'ew_multi', label: 'Multilevel & Chainage Vol' }
+        ]
+      },
+      {
+        id: 'settingout',
+        label: '6. Setting Out',
+        short: 'Curves',
+        icon: `<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19C4 10 10 5 20 5" stroke-linecap="round"/><path d="M4 19V5h16" stroke-dasharray="3 3"/></svg>`,
+        subs: [
+          { id: 'so_horiz', label: 'Horizontal Circular Curve' },
+          { id: 'so_vert', label: 'Vertical Parabolic Curve' }
+        ]
+      },
+      {
+        id: 'area',
+        label: '7. Area Calc',
+        short: 'Area',
+        icon: `<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 3 21 9 18 20 6 20 3 9"/></svg>`,
+        subs: [
+          { id: 'area_calc', label: 'Coordinate Area & Perimeter' }
+        ]
+      },
+      {
+        id: 'levelling',
+        label: '8. Levelling',
+        short: 'Levelling',
+        icon: `<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M6 7v13M18 7v13M9 12h6" stroke-linecap="round"/></svg>`,
+        subs: [
+          { id: 'lvl_book', label: 'Levelling Booking & Reduction' }
+        ]
+      }
+    ];
+
+    function renderNavigation() {
+      const desktopNav = document.getElementById('desktopNav');
+      const mobileNav = document.getElementById('mobileBottomNav');
+
+      desktopNav.innerHTML = MODULES.map(m => {
+        const active = m.id === appState.activeGroup;
+        return `
+          <button onclick="selectModule('${m.id}')"
+                  class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition text-left ${active ? 'bg-gold-500 text-slate-950 font-bold shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}">
+            ${m.icon}
+            <span class="truncate">${m.label}</span>
+          </button>
+        `;
+      }).join('');
+
+      mobileNav.innerHTML = MODULES.map(m => {
+        const active = m.id === appState.activeGroup;
+        return `
+          <button onclick="selectModule('${m.id}')"
+                  class="flex flex-col items-center justify-center min-w-[68px] flex-1 py-1.5 px-1 rounded-xl text-[10px] font-medium transition ${active ? 'text-gold-600 dark:text-gold-400 bg-gold-500/15 font-bold' : 'text-slate-500 dark:text-slate-400'}">
+            ${m.icon}
+            <span class="mt-0.5 truncate">${m.short}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectModule(groupId, subId = null) {
+      appState.activeGroup = groupId;
+      const mod = MODULES.find(m => m.id === groupId) || MODULES[0];
+      appState.activeSub = subId || mod.subs[0].id;
+      renderNavigation();
+      renderSubPills();
+      renderCalculator();
+    }
+
+    function renderSubPills() {
+      const mod = MODULES.find(m => m.id === appState.activeGroup);
+      document.getElementById('activeModuleTitle').textContent = mod.label;
+      const container = document.getElementById('subMenuPills');
+      container.innerHTML = mod.subs.map(s => {
+        const active = s.id === appState.activeSub;
+        return `
+          <button onclick="selectSubTool('${s.id}')"
+                  class="px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition shrink-0 ${active ? 'bg-slate-900 text-white dark:bg-gold-500 dark:text-slate-950 shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}">
+            ${s.label}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectSubTool(subId) {
+      appState.activeSub = subId;
+      renderSubPills();
+      renderCalculator();
+    }
+
+    /* =========================================================================
+       6. CALCULATOR VIEWS & COMPUTATION HANDLERS
+       ========================================================================= */
+    function inputCls() {
+      return "w-full px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-mono focus:outline-none focus:border-gold-500";
+    }
+    function btnPrimaryCls() {
+      return "w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-slate-950 text-xs font-bold shadow-sm transition cursor-pointer";
+    }
+    function btnSecondaryCls() {
+      return "px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold transition cursor-pointer";
+    }
+    function pickBarHtml(targets) {
+      return `
+        <div class="flex flex-wrap items-center gap-1.5 mb-4 p-2 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+          <span class="text-[11px] font-semibold text-slate-500 px-1.5">Tap DB Row for:</span>
+          ${targets.map((t, idx) => `
+            <button type="button" id="pick_${t.id}" onclick="setPickTarget('${t.id}')"
+                    class="pick-btn px-2.5 py-1.5 rounded-lg text-xs transition ${idx === 0 ? 'bg-gold-500 text-slate-950 font-bold' : 'bg-slate-100 dark:bg-slate-800'}">
+              ${t.label}
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderCalculator() {
+      const ws = document.getElementById('calculatorWorkspace');
+      const sub = appState.activeSub;
+
+      // -------------------- 1. COGO --------------------
+      if (sub === 'r_be') {
+        appState.pickTarget = 'stn';
+        ws.innerHTML = `
+          <h2 class="text-base font-bold mb-1">Radiation by Bearing</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Compute polar offset (Y = E, X = N) from an occupied station using bearing (D.MMSS) and horizontal distance.</p>
+          ${pickBarHtml([{ id: 'stn', label: 'Occupied Stn' }])}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <div><label class="block text-xs font-semibold mb-1">Station Easting (Y)</label><input id="stn_y" type="number" step="0.0001" placeholder="645120.450" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Station Northing (X)</label><input id="stn_x" type="number" step="0.0001" placeholder="8360110.220" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Bearing (D.MMSS)</label><input id="h_ang" type="number" step="0.0001" placeholder="45.3015" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Horizontal Distance (m)</label><input id="dist" type="number" step="0.0001" placeholder="125.400" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">New Point ID</label><input id="new_pt_id" type="text" value="RAD_${appState.points.length + 1}" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Code / Remarks</label><input id="new_pt_code" type="text" placeholder="PEG" class="${inputCls()}"></div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="execRadiation('r_be', false)" class="${btnSecondaryCls()}">Preview Coordinates</button>
+            <button onclick="execRadiation('r_be', true)" class="${btnPrimaryCls()}">Compute &amp; Save to Table</button>
+          </div>
+          <div id="cogoResultBox" class="mt-4"></div>
+        `;
+      } else if (sub === 'r_di') {
+        appState.pickTarget = 'stn';
+        ws.innerHTML = `
+          <h2 class="text-base font-bold mb-1">Radiation by Direction</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Orients instrument onto Backsight (BS) and radiates target via clockwise horizontal direction (D.MMSS).</p>
+          ${pickBarHtml([{ id: 'stn', label: 'Occupied Stn' }, { id: 'bs', label: 'Backsight (BS)' }])}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <div><label class="block text-xs font-semibold mb-1">Stn Easting (Y)</label><input id="stn_y" type="number" step="0.0001" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Stn Northing (X)</label><input id="stn_x" type="number" step="0.0001" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Backsight Easting (Y)</label><input id="bs_y" type="number" step="0.0001" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Backsight Northing (X)</label><input id="bs_x" type="number" step="0.0001" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Observed Direction (D.MMSS)</label><input id="h_ang" type="number" step="0.0001" placeholder="90.0000" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Distance (m)</label><input id="dist" type="number" step="0.0001" placeholder="85.250" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">New Point ID</label><input id="new_pt_id" type="text" value="RAD_${appState.points.length + 1}" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Code</label><input id="new_pt_code" type="text" placeholder="DETAIL" class="${inputCls()}"></div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="execRadiation('r_di', false)" class="${btnSecondaryCls()}">Preview Coordinates</button>
+            <button onclick="execRadiation('r_di', true)" class="${btnPrimaryCls()}">Compute &amp; Save to Table</button>
+          </div>
+          <div id="cogoResultBox" class="mt-4"></div>
+        `;
+      } else if (sub === 'r_ecc') {
+        appState.pickTarget = 'stn';
+        ws.innerHTML = `
+          <h2 class="text-base font-bold mb-1">Eccentric Station Radiation</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Reduces observations taken from an eccentric satellite setup (E) back to control station (A).</p>
+          ${pickBarHtml([{ id: 'stn', label: 'Control Stn A' }, { id: 'bs', label: 'Backsight B' }])}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <div><label class="block text-xs font-semibold mb-1">Control Stn A Easting (Y)</label><input id="stn_y" type="number" step="0.0001" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Control Stn A Northing (X)</label><input id="stn_x" type="number" step="0.0001" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Backsight B Easting (Y)</label><input id="bs_y" type="number" step="0.0001" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Backsight B Northing (X)</label><input id="bs_x" type="number" step="0.0001" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Eccentric Dist (A to E) [m]</label><input id="ecc_dist" type="number" step="0.0001" placeholder="1.450" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Eccentric Angle (D.MMSS)</label><input id="ecc_ang" type="number" step="0.0001" placeholder="45.0000" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Target Direction (D.MMSS)</label><input id="h_ang" type="number" step="0.0001" placeholder="120.1530" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Target Distance (m)</label><input id="dist" type="number" step="0.0001" placeholder="150.000" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">New Point ID</label><input id="new_pt_id" type="text" value="ECC_${appState.points.length + 1}" class="${inputCls()}"></div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="execRadiation('r_ecc', false)" class="${btnSecondaryCls()}">Preview Coordinates</button>
+            <button onclick="execRadiation('r_ecc', true)" class="${btnPrimaryCls()}">Compute &amp; Save to Table</button>
+          </div>
+          <div id="cogoResultBox" class="mt-4"></div>
+        `;
+      } else if (sub === 'res_dir') {
+        appState.pickTarget = 'ptA';
+        ws.innerHTML = `
+          <h2 class="text-base font-bold mb-1">3-Point Resection (By Direction / Tienstra)</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Determines unknown occupied station coordinates from observed directions (D.MMSS) to three known control points A, B, C.</p>
+          ${pickBarHtml([{ id: 'ptA', label: 'Point A' }, { id: 'ptB', label: 'Point B' }, { id: 'ptC', label: 'Point C' }])}
+          <div class="space-y-3 mb-4">
+            <div class="grid grid-cols-3 gap-2">
+              <div><label class="block text-[11px] font-semibold mb-1">Pt A Easting (Y)</label><input id="ay" type="number" step="0.0001" class="${inputCls()}"></div>
+              <div><label class="block text-[11px] font-semibold mb-1">Pt A Northing (X)</label><input id="ax" type="number" step="0.0001" class="${inputCls()}"></div>
+              <div><label class="block text-[11px] font-semibold mb-1">Dir to A (D.MMSS)</label><input id="adir" type="number" step="0.0001" placeholder="0.0000" class="${inputCls()}"></div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div><label class="block text-[11px] font-semibold mb-1">Pt B Easting (Y)</label><input id="by" type="number" step="0.0001" class="${inputCls()}"></div>
+              <div><label class="block text-[11px] font-semibold mb-1">Pt B Northing (X)</label><input id="bx" type="number" step="0.0001" class="${inputCls()}"></div>
+              <div><label class="block text-[11px] font-semibold mb-1">Dir to B (D.MMSS)</label><input id="bdir" type="number" step="0.0001" placeholder="64.1230" class="${inputCls()}"></div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div><label class="block text-[11px] font-semibold mb-1">Pt C Easting (Y)</label><input id="cy" type="number" step="0.0001" class="${inputCls()}"></div>
+              <div><label class="block text-[11px] font-semibold mb-1">Pt C Northing (X)</label><input id="cx" type="number" step="0.0001" class="${inputCls()}"></div>
+              <div><label class="block text-[11px] font-semibold mb-1">Dir to C (D.MMSS)</label><input id="cdir" type="number" step="0.0001" placeholder="142.4510" class="${inputCls()}"></div>
+            </div>
+            <div><label class="block text-xs font-semibold mb-1">New Station ID</label><input id="new_pt_id" type="text" value="RES_STN" class="${inputCls()}"></div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="execResection('res_dir', false)" class="${btnSecondaryCls()}">Preview Station</button>
+            <button onclick="execResection('res_dir', true)" class="${btnPrimaryCls()}">Compute &amp; Save Station</button>
+          </div>
+          <div id="cogoResultBox" class="mt-4"></div>
+        `;
+      } else if (sub === 'res_dist') {
+        appState.pickTarget = 'ptA';
+        ws.innerHTML = `
+          <h2 class="text-base font-bold mb-1">2-Point Distance Resection (Trilateration)</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Computes station coordinates from measured horizontal distances to two known control points A and B (left/right solution).</p>
+          ${pickBarHtml([{ id: 'ptA', label: 'Point A' }, { id: 'ptB', label: 'Point B' }])}
+          <div class="space-y-3 mb-4">
+            <div class="grid grid-cols-3 gap-2">
+              <div><label class="block text-[11px] font-semibold mb-1">Pt A Easting (Y)</label><input id="ay" type="number" step="0.0001" class="${inputCls()}"></div>
+              <div><label class="block text-[11px] font-semibold mb-1">Pt A Northing (X)</label><input id="ax" type="number" step="0.0001" class="${inputCls()}"></div>
+              <div><label class="block text-[11px] font-semibold mb-1">Dist to A (m)</label><input id="adist" type="number" step="0.0001" class="${inputCls()}"></div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div><label class="block text-[11px] font-semibold mb-1">Pt B Easting (Y)</label><input id="by" type="number" step="0.0001" class="${inputCls()}"></div>
+              <div><label class="block text-[11px] font-semibold mb-1">Pt B Northing (X)</label><input id="bx" type="number" step="0.0001" class="${inputCls()}"></div>
+              <div><label class="block text-[11px] font-semibold mb-1">Dist to B (m)</label><input id="bdist" type="number" step="0.0001" class="${inputCls()}"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold mb-1">Geometry Side (A → B)</label>
+                <select id="res_side" class="${inputCls()}">
+                  <option value="right">Right of Line A → B</option>
+                  <option value="left">Left of Line A → B</option>
+                </select>
+              </div>
+              <div><label class="block text-xs font-semibold mb-1">New Station ID</label><input id="new_pt_id" type="text" value="RES_DIST" class="${inputCls()}"></div>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="execResection('res_dist', false)" class="${btnSecondaryCls()}">Preview Station</button>
+            <button onclick="execResection('res_dist', true)" class="${btnPrimaryCls()}">Compute &amp; Save Station</button>
+          </div>
+          <div id="cogoResultBox" class="mt-4"></div>
+        `;
+      } else if (sub === 'inter_be' || sub === 'inter_di') {
+        const isDir = sub === 'inter_di';
+        appState.pickTarget = 'ptA';
+        ws.innerHTML = `
+          <h2 class="text-base font-bold mb-1">Forward Intersection (${isDir ? 'By Direction' : 'By Bearing'})</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Intersects two rays from baseline stations A and B to determine an inaccessible target point.</p>
+          ${pickBarHtml(isDir ? [{ id: 'ptA', label: 'Stn A' }, { id: 'ptB', label: 'Stn B' }, { id: 'ptC', label: 'Backsight Ref' }] : [{ id: 'ptA', label: 'Stn A' }, { id: 'ptB', label: 'Stn B' }])}
+          <div class="space-y-3 mb-4">
+            <div class="grid grid-cols-3 gap-2">
+              <div><label class="block text-[11px] font-semibold mb-1">Stn A Easting (Y)</label><input id="ay" type="number" step="0.0001" class="${inputCls()}"></div>
+              <div><label class="block text-[11px] font-semibold mb-1">Stn A Northing (X)</label><input id="ax" type="number" step="0.0001" class="${inputCls()}"></div>
+              <div><label class="block text-[11px] font-semibold mb-1">${isDir ? 'Dir at A' : 'Brg at A'} (D.MMSS)</label><input id="a_ang" type="number" step="0.0001" class="${inputCls()}"></div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div><label class="block text-[11px] font-semibold mb-1">Stn B Easting (Y)</label><input id="by" type="number" step="0.0001" class="${inputCls()}"></div>
+              <div><label class="block text-[11px] font-semibold mb-1">Stn B Northing (X)</label><input id="bx" type="number" step="0.0001" class="${inputCls()}"></div>
+              <div><label class="block text-[11px] font-semibold mb-1">${isDir ? 'Dir at B' : 'Brg at B'} (D.MMSS)</label><input id="b_ang" type="number" step="0.0001" class="${inputCls()}"></div>
+            </div>
+            ${isDir ? `
+              <div class="grid grid-cols-2 gap-2">
+                <div><label class="block text-[11px] font-semibold mb-1">Common Backsight Easting (Y)</label><input id="cy" type="number" step="0.0001" class="${inputCls()}"></div>
+                <div><label class="block text-[11px] font-semibold mb-1">Common Backsight Northing (X)</label><input id="cx" type="number" step="0.0001" class="${inputCls()}"></div>
+              </div>
+            ` : ''}
+            <div><label class="block text-xs font-semibold mb-1">Intersected Point ID</label><input id="new_pt_id" type="text" value="INT_PT" class="${inputCls()}"></div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="execIntersection('${sub}', false)" class="${btnSecondaryCls()}">Preview Intersection</button>
+            <button onclick="execIntersection('${sub}', true)" class="${btnPrimaryCls()}">Compute &amp; Save Point</button>
+          </div>
+          <div id="cogoResultBox" class="mt-4"></div>
+        `;
+      }
+
+      // -------------------- 2. TRAVERSING --------------------
+      else if (appState.activeGroup === 'traverse') {
+        const isLoop = sub.includes('loop');
+        const isLink = sub.includes('link') || sub === 'cld_di';
+        const isClosed = isLoop || isLink;
+        const isDir = sub.endsWith('_di');
+        appState.pickTarget = 'stn';
+
+        const pickTargets = [{ id: 'stn', label: 'Start Stn A' }];
+        if (isDir) pickTargets.push({ id: 'bs', label: 'Opening BS B' });
+        if (isLink) pickTargets.push({ id: 'cy', label: 'Closing Stn C' });
+
+        ws.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <div>
+              <h2 class="text-base font-bold">${MODULES[1].subs.find(s => s.id === sub).label}</h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400">
+                ${isClosed ? 'Includes angular misclosure distribution &amp; Bowditch linear adjustment.' : 'Open/radial traverse computation without closing adjustment.'}
+              </p>
+            </div>
+            <button onclick="loadSampleTraverse()" class="${btnSecondaryCls()}">Load Sample Legs</button>
+          </div>
+          ${pickBarHtml(pickTargets)}
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+            <div><label class="block text-[11px] font-semibold mb-1">Start Stn A Easting (Y)</label><input id="stn_y" type="number" step="0.0001" value="645120.450" class="${inputCls()}"></div>
+            <div><label class="block text-[11px] font-semibold mb-1">Start Stn A Northing (X)</label><input id="stn_x" type="number" step="0.0001" value="8360110.220" class="${inputCls()}"></div>
+            ${isDir ? `
+              <div><label class="block text-[11px] font-semibold mb-1">Opening Backsight B Easting (Y)</label><input id="bs_y" type="number" step="0.0001" value="645385.110" class="${inputCls()}"></div>
+              <div><label class="block text-[11px] font-semibold mb-1">Opening Backsight B Northing (X)</label><input id="bs_x" type="number" step="0.0001" value="8360445.890" class="${inputCls()}"></div>
+            ` : ''}
+            ${isLink ? `
+              <div><label class="block text-[11px] font-semibold mb-1">Closing Stn C Easting (Y)</label><input id="cy_y" type="number" step="0.0001" value="645790.340" class="${inputCls()}"></div>
+              <div><label class="block text-[11px] font-semibold mb-1">Closing Stn C Northing (X)</label><input id="cy_x" type="number" step="0.0001" value="8360290.650" class="${inputCls()}"></div>
+            ` : ''}
+            ${isClosed ? `
+              <div class="sm:col-span-2"><label class="block text-[11px] font-semibold mb-1">Fixed Closing Bearing at ${isLink ? 'C' : 'A'} (D.MMSS, optional)</label><input id="end_brg" type="number" step="0.0001" placeholder="Leave blank to skip angular distribution" class="${inputCls()}"></div>
+            ` : ''}
+          </div>
+
+          <!-- Add Traverse Leg Bar -->
+          <div class="p-3 rounded-xl bg-slate-100/80 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 mb-3">
+            <div class="text-xs font-bold mb-2">Add Traverse Leg</div>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+              <input id="trv_pt_id" type="text" placeholder="Target Pt ID" value="TRV_${appState.traverseLegs.length + 1}" class="${inputCls()}">
+              <input id="trv_ang" type="number" step="0.0001" placeholder="${isDir ? 'Clockwise Ang (D.MMSS)' : 'Bearing (D.MMSS)'}" class="${inputCls()}">
+              <input id="trv_dist" type="number" step="0.0001" placeholder="Distance (m)" class="${inputCls()}">
+              <button type="button" onclick="addTraverseLeg()" class="${btnPrimaryCls()}">+ Add Leg</button>
+            </div>
+          </div>
+
+          <!-- Legs Table -->
+          <div class="overflow-auto max-h-56 rounded-xl border border-slate-200 dark:border-slate-800 mb-3">
+            <table class="w-full text-xs font-mono text-left">
+              <thead class="bg-slate-100 dark:bg-slate-800 text-[10px] uppercase">
+                <tr>
+                  <th class="p-2">#</th>
+                  <th class="p-2">To Stn</th>
+                  <th class="p-2 text-right">${isDir ? 'Angle (D.MMSS)' : 'Bearing (D.MMSS)'}</th>
+                  <th class="p-2 text-right">Dist (m)</th>
+                  <th class="p-2 text-center">Del</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                ${appState.traverseLegs.length === 0 ? `<tr><td colspan="5" class="p-4 text-center font-sans text-slate-400">No traverse legs added yet.</td></tr>` :
+                  appState.traverseLegs.map((leg, i) => `
+                    <tr>
+                      <td class="p-2">${i + 1}</td>
+                      <td class="p-2 font-bold">${escapeHtml(leg.ptId)}</td>
+                      <td class="p-2 text-right">${leg.hAng}</td>
+                      <td class="p-2 text-right">${Number(leg.dist).toFixed(3)}</td>
+                      <td class="p-2 text-center"><button onclick="removeTraverseLeg(${i})" class="text-rose-500 hover:underline">✕</button></td>
+                    </tr>
+                  `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex gap-2">
+              <button type="button" onclick="undoTraverseLeg()" class="${btnSecondaryCls()}">Undo Last</button>
+              <button type="button" onclick="clearTraverseLegs()" class="${btnSecondaryCls()} text-rose-500">Clear Legs</button>
+            </div>
+            <button type="button" onclick="computeAndShowTraverseBooking(${isClosed}, ${isLoop}, '${isDir ? 'dir' : 'bear'}')" class="${btnPrimaryCls()}">
+              Generate Traverse Booking &amp; Adjust
+            </button>
+          </div>
+        `;
+      }
+
+      // -------------------- 3. POINT TRANSFORMATIONS --------------------
+      else if (sub === 'helm_pts') {
+        appState.pickTarget = 'old';
+        ws.innerHTML = `
+          <h2 class="text-base font-bold mb-1">2D Helmert Conformal Transformation — Control Pairs</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Select matching Old (Local) and New (Grid) control points from the Coordinate Table (minimum 2 pairs, 3+ for standard error).</p>
+          ${pickBarHtml([{ id: 'old', label: '1. Pick Old (Local)' }, { id: 'new', label: '2. Pick New (Grid)' }])}
+          <div class="overflow-auto max-h-56 rounded-xl border border-slate-200 dark:border-slate-800 mb-3">
+            <table class="w-full text-xs font-mono text-left">
+              <thead class="bg-slate-100 dark:bg-slate-800 text-[10px] uppercase">
+                <tr><th class="p-2">Pair</th><th class="p-2 text-right">Old Y / X</th><th class="p-2 text-right">New Y / X</th><th class="p-2 text-center">Del</th></tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                ${appState.helmertPairs.length === 0 ? `<tr><td colspan="4" class="p-4 text-center font-sans text-slate-400">No control pairs yet. Tap rows in the table to pair them.</td></tr>` :
+                  appState.helmertPairs.map((p, i) => `
+                    <tr>
+                      <td class="p-2 font-bold">${escapeHtml(p.label)}</td>
+                      <td class="p-2 text-right">${p.oldY.toFixed(3)}, ${p.oldX.toFixed(3)}</td>
+                      <td class="p-2 text-right">${p.newY.toFixed(3)}, ${p.newX.toFixed(3)}</td>
+                      <td class="p-2 text-center"><button onclick="removeHelmertPair(${i})" class="text-rose-500">✕</button></td>
+                    </tr>
+                  `).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="clearHelmertPairs()" class="${btnSecondaryCls()} text-rose-500">Clear Pairs</button>
+            <button onclick="runHelmertSolve()" class="${btnPrimaryCls()}">Solve Transformation Parameters</button>
+          </div>
+          <div id="helmertResultBox" class="mt-4"></div>
+        `;
+      } else if (sub === 'helm_param') {
+        const p = appState.helmertParams;
+        ws.innerHTML = `
+          <h2 class="text-base font-bold mb-1">Helmert 2D Parameters &amp; Batch Point Transform</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">View or manually override transformation constants ($a, b, Y_0, X_0$), then apply to selected table rows.</p>
+          <div class="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 font-mono text-xs mb-3 grid grid-cols-2 gap-2">
+            <div>Scale Factor: <strong>${Number(p.scale || 1).toFixed(7)}</strong></div>
+            <div>Rotation: <strong>${COGO.degToDmsCompact(p.rotation || 0)}</strong></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div><label class="block text-xs font-semibold mb-1">Translation Y₀ (Easting)</label><input id="hp_y0" type="number" step="0.0001" value="${p.y0}" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Translation X₀ (Northing)</label><input id="hp_x0" type="number" step="0.0001" value="${p.x0}" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Constant a (Scale·cos θ)</label><input id="hp_a" type="number" step="0.0000001" value="${p.a}" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Constant b (Scale·sin θ)</label><input id="hp_b" type="number" step="0.0000001" value="${p.b}" class="${inputCls()}"></div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="saveManualHelmertParams()" class="${btnPrimaryCls()}">Save Parameters</button>
+            <button onclick="batchHelmertTransformSelected()" class="${btnSecondaryCls()}">Transform Selected Table Rows (${appState.selectedUids.size})</button>
+          </div>
+        `;
+      } else if (sub === 'losca' || sub === 'utmsca') {
+        const isLo = sub === 'losca';
+        ws.innerHTML = `
+          <h2 class="text-base font-bold mb-1">${isLo ? 'Lo Grid Point Scale Factor (LOSca)' : 'UTM Grid Point Scale Factor (UTMSca)'}</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+            ${isLo ? 'Computes Gauss Conform Lo scale factor k = 1 + 0.01237 · Yₘ² · 10⁻⁶' : 'Computes UTM scale factor k = 0.9996 · (1 + 0.01237 · (Eₘ - 500)² · 10⁻⁶)'}
+          </p>
+          <div class="max-w-sm space-y-3">
+            <div>
+              <label class="block text-xs font-semibold mb-1">${isLo ? 'Mean Y Distance from Central Meridian (km)' : 'Mean UTM Easting Eₘ (km)'}</label>
+              <input id="sca_input" type="number" step="0.001" value="${isLo ? '54.210' : '645.120'}" oninput="calcGridScale('${sub}')" class="${inputCls()}">
+            </div>
+            <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+              <div class="text-[11px] uppercase tracking-wider text-slate-400">Computed Scale Factor (k)</div>
+              <div id="sca_output" class="text-2xl font-bold font-mono text-gold-500 mt-1">1.00000000</div>
+              <div id="sca_ppm" class="text-xs font-mono text-slate-500 mt-1">0.00 ppm</div>
+            </div>
+          </div>
+        `;
+        setTimeout(() => calcGridScale(sub), 10);
+      } else if (sub === 'slopesea') {
+        ws.innerHTML = `
+          <h2 class="text-base font-bold mb-1">Slope, Sea-Level &amp; Atmospheric Refraction Reduction</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Reduces measured slope distance to horizontal distance on the reference ellipsoid (R = 6,371,000 m).</p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+            <div><label class="block text-xs font-semibold mb-1">Height Stn A (m)</label><input id="slp_ha" type="number" step="0.001" value="1245.50" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Height Stn B (m)</label><input id="slp_hb" type="number" step="0.001" value="1262.80" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Slope Distance S (m)</label><input id="slp_s" type="number" step="0.0001" value="845.320" class="${inputCls()}"></div>
+          </div>
+          <button onclick="calcSlopeSeaLevel()" class="${btnPrimaryCls()}">Compute Reduction</button>
+          <div id="slpResultBox" class="mt-4"></div>
+        `;
+      }
+
+      // -------------------- 4. CONVERSIONS --------------------
+      else if (sub === 'lo_utm' || sub === 'utm_lo') {
+        const isLoToUtm = sub === 'lo_utm';
+        appState.pickTarget = 'stn';
+        ws.innerHTML = `
+          <h2 class="text-base font-bold mb-1">${isLoToUtm ? 'Gauss Conform Lo → UTM Conversion' : 'UTM → Gauss Conform Lo Conversion'}</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Uses Clarke 1880 Modified / WGS84 meridian arc iteration &amp; optional 3-Parameter Molodensky Cape ↔ WGS84 datum shift.</p>
+          ${pickBarHtml([{ id: 'stn', label: 'Pick Source Point' }])}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <div><label class="block text-xs font-semibold mb-1">${isLoToUtm ? 'Source Lo Central Meridian (°E)' : 'Source UTM Central Meridian (°E)'}</label><input id="cm_origin" type="number" step="1" value="${isLoToUtm ? '31' : '33'}" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">${isLoToUtm ? 'Target UTM Central Meridian (°E)' : 'Target Lo Central Meridian (°E)'}</label><input id="cm_target" type="number" step="1" value="${isLoToUtm ? '33' : '31'}" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Source Easting (Y) [m]</label><input id="stn_y" type="number" step="0.0001" value="${isLoToUtm ? '-54210.345' : '645120.450'}" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Source Northing (X) [m]</label><input id="stn_x" type="number" step="0.0001" value="${isLoToUtm ? '1658920.112' : '8360110.220'}" class="${inputCls()}"></div>
+            <div class="sm:col-span-2">
+              <label class="flex items-center gap-2 text-xs font-medium cursor-pointer">
+                <input id="apply_molodensky" type="checkbox" checked class="w-4 h-4 accent-gold-500">
+                <span>Apply 3-Parameter Molodensky Datum Shift (Cape Clarke 1880 ↔ WGS84: dX=-136, dY=-108, dZ=-292)</span>
+              </label>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="execGridConversion('${sub}', false)" class="${btnSecondaryCls()}">Convert &amp; Preview</button>
+            <button onclick="execGridConversion('${sub}', true)" class="${btnPrimaryCls()}">Convert &amp; Save to Table</button>
+          </div>
+          <div id="convResultBox" class="mt-4"></div>
+        `;
+      } else if (sub === 'geo_utm') {
+        ws.innerHTML = `
+          <h2 class="text-base font-bold mb-1">Geographic (Lat / Lon) ↔ UTM &amp; Lo Grid</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Converts decimal degrees Latitude/Longitude (South negative, e.g. -14.82563, 28.54925) to UTM or Lo coordinates.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <div><label class="block text-xs font-semibold mb-1">Latitude (° Decimal, S = -)</label><input id="geo_lat" type="number" step="0.000001" value="-14.825630" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Longitude (° Decimal, E = +)</label><input id="geo_lon" type="number" step="0.000001" value="28.549250" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Target Central Meridian (°E)</label><input id="geo_cm" type="number" step="1" value="27" class="${inputCls()}"></div>
+            <div>
+              <label class="block text-xs font-semibold mb-1">Target Projection &amp; Ellipsoid</label>
+              <select id="geo_sys" class="${inputCls()}">
+                <option value="utm_wgs84">UTM Southern Hemisphere (WGS84)</option>
+                <option value="lo_clarke">Gauss Conform Lo (Clarke 1880 Mod)</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="execGeoToGrid(false)" class="${btnSecondaryCls()}">Project &amp; Preview</button>
+            <button onclick="execGeoToGrid(true)" class="${btnPrimaryCls()}">Project &amp; Save to Table</button>
+          </div>
+          <div id="convResultBox" class="mt-4"></div>
+        `;
+      } else if (sub === 'dms_dec') {
+        ws.innerHTML = `
+          <h2 class="text-base font-bold mb-1">DMS (D.MMSS) ↔ Decimal Degrees</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Instant surveyor angular conversion between packed D.MMSS and decimal degrees.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/70 space-y-3">
+              <label class="block text-xs font-bold">D.MMSS → Decimal Degrees</label>
+              <input id="in_dms" type="number" step="0.0001" value="125.3045" oninput="convertDmsLive()" class="${inputCls()}">
+              <div id="out_dec" class="text-lg font-mono font-bold text-gold-500">125.512500°</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/70 space-y-3">
+              <label class="block text-xs font-bold">Decimal Degrees → D.MMSS</label>
+              <input id="in_dec" type="number" step="0.000001" value="125.5125" oninput="convertDecLive()" class="${inputCls()}">
+              <div id="out_dms" class="text-lg font-mono font-bold text-cyan-500">125°30'45" (125.3045)</div>
+            </div>
+          </div>
+        `;
+      } else if (sub === 'units') {
+        ws.innerHTML = `
+          <h2 class="text-base font-bold mb-1">Geodetic Length Unit Converter</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Converts between International Meters, Cape Feet (0.3047972654 m), and English/International Feet (0.3048 m).</p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+            <div><label class="block text-xs font-semibold mb-1">Input Value</label><input id="u_val" type="number" step="0.0001" value="100.000" oninput="convertUnitsLive()" class="${inputCls()}"></div>
+            <div>
+              <label class="block text-xs font-semibold mb-1">From Unit</label>
+              <select id="u_from" onchange="convertUnitsLive()" class="${inputCls()}">
+                <option value="m">Meters (m)</option>
+                <option value="cft">Cape Feet (cf)</option>
+                <option value="ft">English Feet (ft)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold mb-1">To Unit</label>
+              <select id="u_to" onchange="convertUnitsLive()" class="${inputCls()}">
+                <option value="cft">Cape Feet (cf)</option>
+                <option value="m">Meters (m)</option>
+                <option value="ft">English Feet (ft)</option>
+              </select>
+            </div>
+          </div>
+          <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 font-mono">
+            <div class="text-[11px] text-slate-400 uppercase">Converted Length</div>
+            <div id="u_out" class="text-2xl font-bold text-gold-500 mt-1">328.0870 cft</div>
+          </div>
+        `;
+      }
+
+      // -------------------- 5. VOLUME OF EARTHWORKS --------------------
+      else if (appState.activeGroup === 'earthworks') {
+        if (sub === 'ew_level') {
+          ws.innerHTML = `
+            <h2 class="text-base font-bold mb-1">Level Cross-Section Earthwork Volume</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Cross-section area A = h(b + s·h) where b = formation width, h = centerline depth, s = side slope (1V : sH).</p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              <div><label class="block text-xs font-semibold mb-1">Formation Width b (m)</label><input id="ew_b" type="number" step="0.01" value="10.0" class="${inputCls()}"></div>
+              <div><label class="block text-xs font-semibold mb-1">Side Slope s (sH:1V)</label><input id="ew_s" type="number" step="0.1" value="1.5" class="${inputCls()}"></div>
+              <div><label class="block text-xs font-semibold mb-1">Depth h₁ (m)</label><input id="ew_h1" type="number" step="0.01" value="2.10" class="${inputCls()}"></div>
+              <div><label class="block text-xs font-semibold mb-1">Depth h₂ (m)</label><input id="ew_h2" type="number" step="0.01" value="2.85" class="${inputCls()}"></div>
+              <div class="col-span-2"><label class="block text-xs font-semibold mb-1">Section Length L (m)</label><input id="ew_l" type="number" step="0.1" value="20.0" class="${inputCls()}"></div>
+            </div>
+            <button onclick="calcEarthworks('ew_level')" class="${btnPrimaryCls()}">Calculate Section Areas &amp; Volume</button>
+            <div id="ewResultBox" class="mt-4"></div>
+          `;
+        } else if (sub === 'ew_two') {
+          ws.innerHTML = `
+            <h2 class="text-base font-bold mb-1">Two-Level Section (Transverse Ground Slope)</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Computes half-breadths w₁, w₂ and area when existing ground has transverse slope (1V : kH).</p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              <div><label class="block text-xs font-semibold mb-1">Formation Width b (m)</label><input id="ew_b" type="number" step="0.01" value="10.0" class="${inputCls()}"></div>
+              <div><label class="block text-xs font-semibold mb-1">Side Slope s (sH:1V)</label><input id="ew_s" type="number" step="0.1" value="1.5" class="${inputCls()}"></div>
+              <div><label class="block text-xs font-semibold mb-1">Transverse Slope k (kH:1V)</label><input id="ew_k" type="number" step="0.1" value="8.0" class="${inputCls()}"></div>
+              <div><label class="block text-xs font-semibold mb-1">Centerline Depth h (m)</label><input id="ew_h1" type="number" step="0.01" value="2.40" class="${inputCls()}"></div>
+            </div>
+            <button onclick="calcEarthworks('ew_two')" class="${btnPrimaryCls()}">Compute Two-Level Area</button>
+            <div id="ewResultBox" class="mt-4"></div>
+          `;
+        } else if (sub === 'ew_three') {
+          ws.innerHTML = `
+            <h2 class="text-base font-bold mb-1">Three-Level Cross-Section</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Area A = (h/2)(wL + wR) + (b/4)(hL + hR) from centerline depth h and left/right slope stake offsets.</p>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+              <div><label class="block text-xs font-semibold mb-1">Formation Width b (m)</label><input id="ew_b" type="number" step="0.01" value="10.0" class="${inputCls()}"></div>
+              <div><label class="block text-xs font-semibold mb-1">Centerline Depth h (m)</label><input id="ew_h" type="number" step="0.01" value="2.20" class="${inputCls()}"></div>
+              <div><label class="block text-xs font-semibold mb-1">Left Depth hL (m)</label><input id="ew_hl" type="number" step="0.01" value="1.80" class="${inputCls()}"></div>
+              <div><label class="block text-xs font-semibold mb-1">Left Offset wL (m)</label><input id="ew_wl" type="number" step="0.01" value="7.70" class="${inputCls()}"></div>
+              <div><label class="block text-xs font-semibold mb-1">Right Depth hR (m)</label><input id="ew_hr" type="number" step="0.01" value="2.90" class="${inputCls()}"></div>
+              <div><label class="block text-xs font-semibold mb-1">Right Offset wR (m)</label><input id="ew_wr" type="number" step="0.01" value="9.35" class="${inputCls()}"></div>
+            </div>
+            <button onclick="calcEarthworks('ew_three')" class="${btnPrimaryCls()}">Compute Three-Level Area</button>
+            <div id="ewResultBox" class="mt-4"></div>
+          `;
+        } else if (sub === 'ew_sidehill') {
+          ws.innerHTML = `
+            <h2 class="text-base font-bold mb-1">Side-Hill Two-Level Section (Cut &amp; Fill Split)</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Computes simultaneous Cut Area and Fill Area on sidelong ground where centerline cut/fill h &lt; b/(2k).</p>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+              <div><label class="block text-xs font-semibold mb-1">Formation Width b (m)</label><input id="ew_b" type="number" step="0.01" value="12.0" class="${inputCls()}"></div>
+              <div><label class="block text-xs font-semibold mb-1">Cut Side Slope s_cut</label><input id="ew_sc" type="number" step="0.1" value="1.0" class="${inputCls()}"></div>
+              <div><label class="block text-xs font-semibold mb-1">Fill Side Slope s_fill</label><input id="ew_sf" type="number" step="0.1" value="1.5" class="${inputCls()}"></div>
+              <div><label class="block text-xs font-semibold mb-1">Transverse Slope k (kH:1V)</label><input id="ew_k" type="number" step="0.1" value="5.0" class="${inputCls()}"></div>
+              <div><label class="block text-xs font-semibold mb-1">Centerline Cut h (m)</label><input id="ew_h" type="number" step="0.01" value="0.45" class="${inputCls()}"></div>
+            </div>
+            <button onclick="calcEarthworks('ew_sidehill')" class="${btnPrimaryCls()}">Compute Cut &amp; Fill Areas</button>
+            <div id="ewResultBox" class="mt-4"></div>
+          `;
+        } else if (sub === 'ew_multi') {
+          ws.innerHTML = `
+            <h2 class="text-base font-bold mb-1">Multilevel Cross-Section &amp; Chainage Volume</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">1) Enter cross-section offset/height pairs (Left to Right) for exact coordinate area, or 2) Accumulate chainage areas for End-Area &amp; Prismoidal volume.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div class="p-3 rounded-xl bg-slate-100/70 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                <div class="text-xs font-bold mb-1.5">A. Multilevel Section Offsets (Offset, Cut/Fill Depth)</div>
+                <textarea id="ew_multi_pts" rows="4" class="${inputCls()} text-xs">-9.5, 0.0&#10;-5.0, 2.1&#10;0.0, 2.6&#10;5.0, 1.9&#10;8.2, 0.0</textarea>
+                <div class="flex gap-2 mt-2">
+                  <button onclick="calcMultilevelArea()" class="${btnSecondaryCls()}">Compute Area</button>
+                  <button onclick="appendMultilevelToChainage()" class="${btnPrimaryCls()}">Add Area to Chainage List</button>
+                </div>
+                <div id="ewMultiAreaOut" class="mt-2 text-xs font-mono text-gold-500"></div>
+              </div>
+
+              <div class="p-3 rounded-xl bg-slate-100/70 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                <div class="text-xs font-bold mb-1.5">B. Chainage Volume Schedule (End-Area &amp; Prismoidal)</div>
+                <div class="grid grid-cols-3 gap-1.5 mb-2">
+                  <input id="ew_ch_val" type="number" step="1" placeholder="Chainage (m)" value="${(appState.earthworkSections.length) * 20}" class="${inputCls()} text-xs">
+                  <input id="ew_area_val" type="number" step="0.01" placeholder="Area (m²)" class="${inputCls()} text-xs">
+                  <button onclick="addChainageSection()" class="${btnPrimaryCls()}">+ Add</button>
+                </div>
+                <div class="max-h-36 overflow-auto rounded-lg border border-slate-200 dark:border-slate-700 mb-2">
+                  <table class="w-full text-xs font-mono">
+                    <thead class="bg-slate-200 dark:bg-slate-800"><tr><th class="p-1.5 text-left">Ch (m)</th><th class="p-1.5 text-right">Area (m²)</th><th class="p-1.5"></th></tr></thead>
+                    <tbody>
+                      ${appState.earthworkSections.map((s, i) => `
+                        <tr class="border-t border-slate-200 dark:border-slate-800">
+                          <td class="p-1.5">${s.chainage}</td>
+                          <td class="p-1.5 text-right">${Number(s.area).toFixed(2)}</td>
+                          <td class="p-1.5 text-right"><button onclick="removeChainageSection(${i})" class="text-rose-500">✕</button></td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+                <button onclick="calcTotalChainageVolume()" class="${btnPrimaryCls()} w-full">Compute Total Earthwork Volume</button>
+              </div>
+            </div>
+            <div id="ewResultBox" class="mt-4"></div>
+          `;
+        }
+      }
+
+      // -------------------- 6. SETTING OUT --------------------
+      else if (sub === 'so_horiz') {
+        appState.pickTarget = 'stn';
+        ws.innerHTML = `
+          <h2 class="text-base font-bold mb-1">Horizontal Circular Curve Setting Out</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Computes Tangent Length (T), Curve Length (L), Long Chord (C), External (E), Mid-ordinate (M), Deflection Angles, and Chainage Pegs.</p>
+          ${pickBarHtml([{ id: 'stn', label: 'Optional PI Coords' }])}
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+            <div><label class="block text-xs font-semibold mb-1">Radius R (m)</label><input id="hc_r" type="number" step="0.01" value="250.00" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Deflection Angle Δ (D.MMSS)</label><input id="hc_delta" type="number" step="0.0001" value="36.2400" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">PI Chainage (m)</label><input id="hc_pi_ch" type="number" step="0.01" value="1240.00" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Peg Interval (m)</label><input id="hc_int" type="number" step="1" value="20" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">PI Easting Y (Optional)</label><input id="stn_y" type="number" step="0.001" placeholder="645200.000" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">PI Northing X (Optional)</label><input id="stn_x" type="number" step="0.001" placeholder="8360250.000" class="${inputCls()}"></div>
+            <div class="col-span-2 sm:col-span-3"><label class="block text-xs font-semibold mb-1">Incoming Tangent Bearing (PI → BC or Forward Brg, D.MMSS)</label><input id="hc_brg" type="number" step="0.0001" value="45.0000" class="${inputCls()}"></div>
+          </div>
+          <button onclick="calcHorizontalCurve()" class="${btnPrimaryCls()}">Compute Curve Elements &amp; Pegging Table</button>
+          <div id="soResultBox" class="mt-4"></div>
+        `;
+      } else if (sub === 'so_vert') {
+        ws.innerHTML = `
+          <h2 class="text-base font-bold mb-1">Vertical Parabolic Curve Setting Out</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Equal-tangent crest/sag vertical curve design with PVC, PVI, PVT, turning point (High/Low), and chainage elevations.</p>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+            <div><label class="block text-xs font-semibold mb-1">Grade 1 g₁ (%)</label><input id="vc_g1" type="number" step="0.01" value="2.50" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Grade 2 g₂ (%)</label><input id="vc_g2" type="number" step="0.01" value="-1.80" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Curve Length L (m)</label><input id="vc_l" type="number" step="1" value="160" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">PVI Chainage (m)</label><input id="vc_pvi_ch" type="number" step="0.01" value="500.00" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">PVI Elevation (m)</label><input id="vc_pvi_rl" type="number" step="0.001" value="1250.450" class="${inputCls()}"></div>
+            <div><label class="block text-xs font-semibold mb-1">Peg Interval (m)</label><input id="vc_int" type="number" step="1" value="20" class="${inputCls()}"></div>
+          </div>
+          <button onclick="calcVerticalCurve()" class="${btnPrimaryCls()}">Compute Vertical Curve Schedule</button>
+          <div id="soResultBox" class="mt-4"></div>
+        `;
+      }
+
+      // -------------------- 7. AREA CALCULATIONS --------------------
+      else if (appState.activeGroup === 'area') {
+        const res = calculateArea(appState.areaVertices);
+        const ha = res.area / 10000;
+        const acres = res.area / 4046.8564224;
+        ws.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <div>
+              <h2 class="text-base font-bold">Coordinate Area &amp; Perimeter (Surveyor's Formula)</h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Tap rows in the Coordinate Table in clockwise/counter-clockwise order to build the polygon.</p>
+            </div>
+            <div class="flex gap-1.5">
+              <button onclick="popAreaVertex()" class="${btnSecondaryCls()}">Undo Last</button>
+              <button onclick="clearAreaVertices()" class="${btnSecondaryCls()} text-rose-500">Clear All</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4">
+            <div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800">
+              <div class="text-[10px] uppercase text-slate-400">Area (m²)</div>
+              <div class="text-lg font-bold font-mono text-gold-500">${res.area.toFixed(3)}</div>
+            </div>
+            <div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800">
+              <div class="text-[10px] uppercase text-slate-400">Hectares (Ha)</div>
+              <div class="text-lg font-bold font-mono text-cyan-500">${ha.toFixed(4)}</div>
+            </div>
+            <div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800">
+              <div class="text-[10px] uppercase text-slate-400">Acres (ac)</div>
+              <div class="text-lg font-bold font-mono">${acres.toFixed(4)}</div>
+            </div>
+            <div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800">
+              <div class="text-[10px] uppercase text-slate-400">Perimeter (m)</div>
+              <div class="text-lg font-bold font-mono">${res.perimeter.toFixed(3)}</div>
+            </div>
+          </div>
+
+          <div class="overflow-auto max-h-60 rounded-xl border border-slate-200 dark:border-slate-800">
+            <table class="w-full text-xs font-mono text-left">
+              <thead class="bg-slate-100 dark:bg-slate-800 text-[10px] uppercase">
+                <tr><th class="p-2">#</th><th class="p-2">Vertex ID</th><th class="p-2 text-right">Easting (Y)</th><th class="p-2 text-right">Northing (X)</th></tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                ${appState.areaVertices.length === 0 ? `<tr><td colspan="4" class="p-5 text-center font-sans text-slate-400">Tap points in the Coordinate Table to add polygon vertices.</td></tr>` :
+                  appState.areaVertices.map((v, i) => `
+                    <tr><td class="p-2">${i + 1}</td><td class="p-2 font-bold">${escapeHtml(v.id)}</td><td class="p-2 text-right">${Number(v.y).toFixed(3)}</td><td class="p-2 text-right">${Number(v.x).toFixed(3)}</td></tr>
+                  `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      // -------------------- 8. LEVELLING CALCULATIONS --------------------
+      else if (appState.activeGroup === 'levelling') {
+        ws.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div>
+              <h2 class="text-base font-bold">Levelling Field Book &amp; Reduction Engine</h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Supports Rise &amp; Fall and Height of Collimation (HPC) methods with arithmetic checks &amp; misclosure adjustment.</p>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              <button onclick="addLevellingRow()" class="${btnSecondaryCls()}">+ Add Row</button>
+              <button onclick="clearLevellingRows()" class="${btnSecondaryCls()} text-rose-500">Clear</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+            <div>
+              <label class="block text-xs font-semibold mb-1">Opening Benchmark RL (m)</label>
+              <input id="lvl_start_rl" type="number" step="0.001" value="1245.500" class="${inputCls()}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold mb-1">Closing BM RL (Optional, for adjustment)</label>
+              <input id="lvl_end_rl" type="number" step="0.001" placeholder="Leave blank if open" class="${inputCls()}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold mb-1">Reduction Method</label>
+              <select id="lvl_method" class="${inputCls()}">
+                <option value="rise_fall">Rise &amp; Fall Method</option>
+                <option value="hpc">Height of Collimation (HPC)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="overflow-auto max-h-72 rounded-xl border border-slate-200 dark:border-slate-800 mb-3">
+            <table class="w-full text-xs font-mono text-left">
+              <thead class="bg-slate-100 dark:bg-slate-800 text-[10px] uppercase">
+                <tr>
+                  <th class="p-2">Station</th>
+                  <th class="p-2 text-right">BS (m)</th>
+                  <th class="p-2 text-right">IS (m)</th>
+                  <th class="p-2 text-right">FS (m)</th>
+                  <th class="p-2">Remarks</th>
+                  <th class="p-2 text-center">Del</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                ${appState.levellingRows.map((r, i) => `
+                  <tr>
+                    <td class="p-1.5"><input type="text" value="${escapeHtml(r.stn)}" onchange="updateLvlCell(${i}, 'stn', this.value)" class="w-24 px-2 py-1 rounded bg-slate-100 dark:bg-slate-800"></td>
+                    <td class="p-1.5"><input type="number" step="0.001" value="${r.bs}" onchange="updateLvlCell(${i}, 'bs', this.value)" class="w-20 px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-right"></td>
+                    <td class="p-1.5"><input type="number" step="0.001" value="${r.is}" onchange="updateLvlCell(${i}, 'is', this.value)" class="w-20 px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-right"></td>
+                    <td class="p-1.5"><input type="number" step="0.001" value="${r.fs}" onchange="updateLvlCell(${i}, 'fs', this.value)" class="w-20 px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-right"></td>
+                    <td class="p-1.5"><input type="text" value="${escapeHtml(r.remarks)}" onchange="updateLvlCell(${i}, 'remarks', this.value)" class="w-36 px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 font-sans"></td>
+                    <td class="p-1.5 text-center"><button onclick="removeLevellingRow(${i})" class="text-rose-500">✕</button></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <button onclick="generateLevellingBooking()" class="${btnPrimaryCls()}">Reduce Levels &amp; Generate Booking Sheet</button>
+        `;
+      }
+    }
+
+    /* =========================================================================
+       7. EXECUTION FUNCTIONS FOR EVERY MODULE
+       ========================================================================= */
+
+    // --- 1. COGO EXECUTIONS ---
+    function execRadiation(mode, save) {
+      const sY = parseFloat(document.getElementById('stn_y').value);
+      const sX = parseFloat(document.getElementById('stn_x').value);
+      const dst = parseFloat(document.getElementById('dist').value);
+      const rawAng = parseFloat(document.getElementById('h_ang').value);
+      const ptId = document.getElementById('new_pt_id')?.value.trim() || `RAD_${appState.points.length + 1}`;
+      const code = document.getElementById('new_pt_code')?.value.trim() || '';
+
+      if (isNaN(sY) || isNaN(sX) || isNaN(dst) || isNaN(rawAng)) {
+        setStatus('Please fill all station, angle (D.MMSS), and distance fields.');
+        return;
+      }
+      const hAng = COGO.dmsToDeg(rawAng);
+      let finalY, finalX, usedBrg;
+
+      if (mode === 'r_be') {
+        usedBrg = hAng;
+        const off = COGO.rectangular(dst, hAng);
+        finalY = sY + off.y;
+        finalX = sX + off.x;
+      } else if (mode === 'r_di') {
+        const bY = parseFloat(document.getElementById('bs_y').value);
+        const bX = parseFloat(document.getElementById('bs_x').value);
+        if (isNaN(bY) || isNaN(bX)) { setStatus('Enter Backsight Y & X.'); return; }
+        const ori = COGO.polar(bY - sY, bX - sX);
+        usedBrg = (ori.brg + hAng) % 360;
+        const off = COGO.rectangular(dst, usedBrg);
+        finalY = sY + off.y;
+        finalX = sX + off.x;
+      } else if (mode === 'r_ecc') {
+        const bY = parseFloat(document.getElementById('bs_y').value);
+        const bX = parseFloat(document.getElementById('bs_x').value);
+        const eccD = parseFloat(document.getElementById('ecc_dist').value);
+        const eccA = COGO.dmsToDeg(parseFloat(document.getElementById('ecc_ang').value));
+        if (isNaN(bY) || isNaN(bX) || isNaN(eccD) || isNaN(eccA)) { setStatus('Enter Backsight and Eccentric offset fields.'); return; }
+        const joinBS = COGO.polar(bY - sY, bX - sX);
+        const eccOffset = COGO.rectangular(eccD, joinBS.brg + eccA);
+        const instY = sY + eccOffset.y;
+        const instX = sX + eccOffset.x;
+        const targetJoin = COGO.polar(bY - instY, bX - instX);
+        const corrAngle = Math.asin((eccD * Math.sin(COGO.deg2rad(hAng))) / targetJoin.dist);
+        usedBrg = (targetJoin.brg + hAng + COGO.rad2deg(corrAngle)) % 360;
+        const targetOffset = COGO.rectangular(dst, usedBrg);
+        finalY = instY + targetOffset.y;
+        finalX = instX + targetOffset.x;
+      }
+
+      document.getElementById('cogoResultBox').innerHTML = `
+        <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gold-500/40 font-mono text-xs space-y-1">
+          <div class="text-gold-500 font-bold">Computed Point: ${escapeHtml(ptId)}</div>
+          <div>Easting (Y): <strong>${finalY.toFixed(4)}</strong> m</div>
+          <div>Northing (X): <strong>${finalX.toFixed(4)}</strong> m</div>
+          <div>Final Bearing: <strong>${COGO.degToDms(usedBrg)}</strong></div>
+        </div>
+      `;
+      if (save) {
+        addPointToDB(ptId, finalY, finalX, 0, code);
+        setStatus(`Saved ${ptId} (Y: ${finalY.toFixed(3)}, X: ${finalX.toFixed(3)}) to table.`);
+      } else {
+        setStatus(`Previewed ${ptId} coordinates.`);
+      }
+    }
+
+    function execResection(mode, save) {
+      const ay = parseFloat(document.getElementById('ay').value), ax = parseFloat(document.getElementById('ax').value);
+      const by = parseFloat(document.getElementById('by').value), bx = parseFloat(document.getElementById('bx').value);
+      const ptId = document.getElementById('new_pt_id')?.value.trim() || 'RES_STN';
+      let resY, resX;
+
+      if (mode === 'res_dir') {
+        const cy = parseFloat(document.getElementById('cy').value), cx = parseFloat(document.getElementById('cx').value);
+        const aDir = COGO.dmsToDeg(parseFloat(document.getElementById('adir').value));
+        const bDir = COGO.dmsToDeg(parseFloat(document.getElementById('bdir').value));
+        const cDir = COGO.dmsToDeg(parseFloat(document.getElementById('cdir').value));
+        if ([ay, ax, by, bx, cy, cx].some(isNaN)) { setStatus('Enter coordinates for A, B, and C.'); return; }
+
+        const cotB = 1 / Math.tan(COGO.deg2rad(bDir - aDir));
+        const cotC = 1 / Math.tan(COGO.deg2rad(cDir - aDir));
+        const xb = (bx - ax) - (by - ay) * cotB;
+        const yb = (by - ay) + (bx - ax) * cotB;
+        const xc = (cx - ax) - (cy - ay) * cotC;
+        const yc = (cy - ay) + (cx - ax) * cotC;
+        if (Math.abs(yc - yb) < 1e-10) { setStatus('Danger circle: Stations A, B, C, and occupied point are concyclic.'); return; }
+
+        const tn = -(xc - xb) / (yc - yb);
+        const dx = (xb + yb * tn) / (1 + tn * tn);
+        resX = ax + dx;
+        resY = ay + dx * tn;
+      } else {
+        const dsta = parseFloat(document.getElementById('adist').value);
+        const dstb = parseFloat(document.getElementById('bdist').value);
+        const side = document.getElementById('res_side').value;
+        if ([ay, ax, by, bx, dsta, dstb].some(isNaN)) { setStatus('Enter coordinates and distances to A and B.'); return; }
+        const join = COGO.polar(by - ay, bx - ax);
+        const X = join.dist;
+        if (dsta + dstb < X || Math.abs(dsta - dstb) > X) { setStatus('Distances do not intersect.'); return; }
+        const xx = (X * X + dsta * dsta - dstb * dstb) / (2 * X);
+        const yy = Math.sqrt(Math.max(0, dsta * dsta - xx * xx)) * (side === 'left' ? -1 : 1);
+        const rel = COGO.polar(yy, xx);
+        const final = COGO.rectangular(rel.dist, join.brg + rel.brg);
+        resY = ay + final.y;
+        resX = ax + final.x;
+      }
+
+      document.getElementById('cogoResultBox').innerHTML = `
+        <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gold-500/40 font-mono text-xs space-y-1">
+          <div class="text-gold-500 font-bold">Resected Station: ${escapeHtml(ptId)}</div>
+          <div>Easting (Y): <strong>${resY.toFixed(4)}</strong> m</div>
+          <div>Northing (X): <strong>${resX.toFixed(4)}</strong> m</div>
+        </div>
+      `;
+      if (save) {
+        addPointToDB(ptId, resY, resX, 0, 'RESECTION');
+        setStatus(`Saved Resection Station ${ptId}.`);
+      }
+    }
+
+    function execIntersection(mode, save) {
+      const ay = parseFloat(document.getElementById('ay').value), ax = parseFloat(document.getElementById('ax').value);
+      const by = parseFloat(document.getElementById('by').value), bx = parseFloat(document.getElementById('bx').value);
+      const aAng = COGO.dmsToDeg(parseFloat(document.getElementById('a_ang').value));
+      const bAng = COGO.dmsToDeg(parseFloat(document.getElementById('b_ang').value));
+      const ptId = document.getElementById('new_pt_id')?.value.trim() || 'INT_PT';
+      if ([ay, ax, by, bx, aAng, bAng].some(isNaN)) { setStatus('Enter A, B coordinates and angles.'); return; }
+
+      let brgA = aAng, brgB = bAng;
+      if (mode === 'inter_di') {
+        const cy = parseFloat(document.getElementById('cy').value), cx = parseFloat(document.getElementById('cx').value);
+        if (isNaN(cy) || isNaN(cx)) { setStatus('Enter Common Backsight Y and X.'); return; }
+        brgA = COGO.polar(cy - ay, cx - ax).brg + aAng;
+        brgB = COGO.polar(cy - by, cx - bx).brg + bAng;
+      }
+
+      const sinDiff = Math.sin(COGO.deg2rad(brgB - brgA));
+      if (Math.abs(sinDiff) < 1e-10) { setStatus('Rays are parallel — no intersection.'); return; }
+
+      // Exact vector intersection using sin/cos (handles 90° and 270° bearings without tan overflow)
+      const dy = by - ay, dx = bx - ax;
+      const distA = (dy * Math.cos(COGO.deg2rad(brgB)) - dx * Math.sin(COGO.deg2rad(brgB))) / sinDiff;
+      const off = COGO.rectangular(distA, brgA);
+      const resY = ay + off.y;
+      const resX = ax + off.x;
+
+      document.getElementById('cogoResultBox').innerHTML = `
+        <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gold-500/40 font-mono text-xs space-y-1">
+          <div class="text-gold-500 font-bold">Intersected Point: ${escapeHtml(ptId)}</div>
+          <div>Easting (Y): <strong>${resY.toFixed(4)}</strong> m</div>
+          <div>Northing (X): <strong>${resX.toFixed(4)}</strong> m</div>
+          <div>Distance from A: <strong>${distA.toFixed(3)}</strong> m</div>
+        </div>
+      `;
+      if (save) {
+        addPointToDB(ptId, resY, resX, 0, 'INTERSECT');
+        setStatus(`Saved Intersection Point ${ptId}.`);
+      }
+    }
+
+    // --- 2. TRAVERSE EXECUTIONS & BOOKING SHEET ---
+    function addTraverseLeg() {
+      const ptId = document.getElementById('trv_pt_id').value.trim() || `TRV_${appState.traverseLegs.length + 1}`;
+      const hAng = parseFloat(document.getElementById('trv_ang').value);
+      const dist = parseFloat(document.getElementById('trv_dist').value);
+      if (isNaN(hAng) || isNaN(dist) || dist <= 0) {
+        setStatus('Enter valid angle (D.MMSS) and positive distance.');
+        return;
+      }
+      appState.traverseLegs.push({ ptId, hAng, dist });
+      saveModuleState();
+      renderCalculator();
+      setStatus(`Added traverse leg to ${ptId}.`);
+    }
+    function removeTraverseLeg(idx) {
+      appState.traverseLegs.splice(idx, 1);
+      saveModuleState();
+      renderCalculator();
+    }
+    function undoTraverseLeg() {
+      appState.traverseLegs.pop();
+      saveModuleState();
+      renderCalculator();
+    }
+    function clearTraverseLegs() {
+      appState.traverseLegs = [];
+      saveModuleState();
+      renderCalculator();
+      setStatus('Cleared traverse legs.');
+    }
+    function loadSampleTraverse() {
+      appState.traverseLegs = [
+        { ptId: 'TRV_1', hAng: 85.1520, dist: 142.350 },
+        { ptId: 'TRV_2', hAng: 174.4010, dist: 198.600 },
+        { ptId: 'TRV_3', hAng: 182.1030, dist: 165.420 },
+        { ptId: 'ZAM_103', hAng: 168.2500, dist: 210.180 }
+      ];
+      saveModuleState();
+      renderCalculator();
+      setStatus('Loaded 4 sample traverse legs.');
+    }
+
+    function computeAndShowTraverseBooking(isClosed, isLoop, mode) {
+      if (appState.traverseLegs.length === 0) {
+        setStatus('Add at least one traverse leg first.');
+        return;
+      }
+      const sY = parseFloat(document.getElementById('stn_y').value);
+      const sX = parseFloat(document.getElementById('stn_x').value);
+      if (isNaN(sY) || isNaN(sX)) { setStatus('Enter Start Station A coordinates.'); return; }
+
+      let startBrg = 0;
+      let hasBacksight = false;
+      if (mode === 'dir') {
+        const bY = parseFloat(document.getElementById('bs_y')?.value);
+        const bX = parseFloat(document.getElementById('bs_x')?.value);
+        if (isNaN(bY) || isNaN(bX)) { setStatus('Enter Opening Backsight B coordinates.'); return; }
+        startBrg = COGO.polar(bY - sY, bX - sX).brg;
+        hasBacksight = true;
+      }
+
+      let stnC = { y: sY, x: sX };
+      if (!isLoop && isClosed) {
+        const cY = parseFloat(document.getElementById('cy_y')?.value);
+        const cX = parseFloat(document.getElementById('cy_x')?.value);
+        if (isNaN(cY) || isNaN(cX)) { setStatus('Enter Closing Station C coordinates.'); return; }
+        stnC = { y: cY, x: cX };
+      }
+
+      const rawEndBrg = document.getElementById('end_brg')?.value;
+      const endBrg = (rawEndBrg !== undefined && rawEndBrg !== '') ? COGO.dmsToDeg(parseFloat(rawEndBrg)) : null;
+
+      const report = TraverseEngine.calculate({
+        startBrg,
+        endBrg,
+        stnA: { y: sY, x: sX },
+        stnC,
+        stations: appState.traverseLegs,
+        mode,
+        isClosed,
+        hasBacksight
+      });
+      const adjusted = TraverseEngine.applyBowditch(report);
+
+      appState.lastBookingExport = {
+        type: 'traverse',
+        filename: `Traverse_Booking_${new Date().toISOString().split('T')[0]}.csv`,
+        csv: 'Station,ObsAngle,AdjustedBrg,Distance,DeltaY,DeltaX,CorrY,CorrX,FinalEasting_Y,FinalNorthing_X\n' +
+          adjusted.map(pt => `${pt.ptId},${pt.obsAng},${COGO.degToDmsCompact(pt.brg)},${pt.dist.toFixed(3)},${pt.dY.toFixed(4)},${pt.dX.toFixed(4)},${pt.corrY.toFixed(4)},${pt.corrX.toFixed(4)},${pt.y.toFixed(4)},${pt.x.toFixed(4)}`).join('\n'),
+        points: adjusted.map(pt => ({ pt_no: pt.ptId, easting: pt.y, northing: pt.x, elevation: 0, code: 'TRAVERSE' }))
+      };
+
+      document.getElementById('bookingModalTitle').textContent = 'Traverse Computation & Bowditch Adjustment Booking Sheet';
+      document.getElementById('saveBookingPointsBtn').classList.remove('hidden');
+      document.getElementById('printArea').innerHTML = `
+        <div class="border-b border-slate-300 dark:border-slate-700 pb-3 flex flex-wrap justify-between gap-2">
+          <div>
+            <div class="text-sm font-bold text-gold-500">KAYPAN GEOSYSTEMS — TRAVERSE COMPUTATION BOOKING</div>
+            <div class="text-[11px] text-slate-500">Generated: ${new Date().toLocaleString()} | Opening Bearing: ${COGO.degToDmsCompact(startBrg)}</div>
+          </div>
+          <div class="font-mono text-right">
+            <div>Total Distance: <strong>${report.totalDist.toFixed(3)} m</strong></div>
+            ${isClosed ? `
+              <div>Angular Misclosure: <strong>${COGO.degToDmsCompact(report.angularMisclosure)}</strong></div>
+              <div>Linear Error: <strong>${report.linearErr.toFixed(4)} m</strong> (ΔY: ${report.misY.toFixed(4)}, ΔX: ${report.misX.toFixed(4)})</div>
+              <div>Relative Precision: <strong>1 : ${Math.round(report.accuracy).toLocaleString()}</strong></div>
+            ` : `<div>Type: <strong>Open / Unclosed Traverse</strong></div>`}
+          </div>
+        </div>
+
+        <table class="w-full font-mono text-[11px] border-collapse border border-slate-300 dark:border-slate-700">
+          <thead class="bg-slate-100 dark:bg-slate-800">
+            <tr>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-left">Station</th>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-right">Obs (D.MMSS)</th>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-right">Adj Bearing</th>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-right">Dist (m)</th>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-right">ΔY (E)</th>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-right">ΔX (N)</th>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-right">Bowditch cY / cX</th>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-right">Final Easting (Y)</th>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-right">Final Northing (X)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="bg-slate-50 dark:bg-slate-800/40">
+              <td class="border border-slate-300 dark:border-slate-700 p-2 font-bold">START_A</td>
+              <td class="border border-slate-300 dark:border-slate-700 p-2 text-right">—</td>
+              <td class="border border-slate-300 dark:border-slate-700 p-2 text-right">${COGO.degToDmsCompact(startBrg)}</td>
+              <td class="border border-slate-300 dark:border-slate-700 p-2 text-right">0.000</td>
+              <td class="border border-slate-300 dark:border-slate-700 p-2 text-right">—</td>
+              <td class="border border-slate-300 dark:border-slate-700 p-2 text-right">—</td>
+              <td class="border border-slate-300 dark:border-slate-700 p-2 text-right">0.000 / 0.000</td>
+              <td class="border border-slate-300 dark:border-slate-700 p-2 text-right font-bold">${sY.toFixed(3)}</td>
+              <td class="border border-slate-300 dark:border-slate-700 p-2 text-right font-bold">${sX.toFixed(3)}</td>
+            </tr>
+            ${adjusted.map(pt => `
+              <tr>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 font-bold">${escapeHtml(pt.ptId)}</td>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 text-right">${pt.obsAng}</td>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 text-right">${COGO.degToDmsCompact(pt.brg)}</td>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 text-right">${pt.dist.toFixed(3)}</td>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 text-right">${pt.dY.toFixed(3)}</td>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 text-right">${pt.dX.toFixed(3)}</td>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 text-right text-cyan-500">${pt.corrY >= 0 ? '+' : ''}${pt.corrY.toFixed(4)} / ${pt.corrX >= 0 ? '+' : ''}${pt.corrX.toFixed(4)}</td>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 text-right font-bold text-gold-500">${pt.y.toFixed(3)}</td>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 text-right font-bold text-gold-500">${pt.x.toFixed(3)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      openModal('bookingModal');
+    }
+
+    // --- 3. TRANSFORMATIONS EXECUTIONS ---
+    function removeHelmertPair(idx) {
+      appState.helmertPairs.splice(idx, 1);
+      saveModuleState();
+      renderCalculator();
+    }
+    function clearHelmertPairs() {
+      appState.helmertPairs = [];
+      saveModuleState();
+      renderCalculator();
+    }
+    function runHelmertSolve() {
+      if (appState.helmertPairs.length < 2) {
+        setStatus('At least 2 control point pairs are required.');
+        return;
+      }
+      const params = HelmertEngine.calculateParameters(appState.helmertPairs);
+      if (!params) { setStatus('Singular geometry — check control pairs.'); return; }
+      const stdErr = HelmertEngine.calculateStandardError(appState.helmertPairs, params);
+      appState.helmertParams = params;
+      saveModuleState();
+
+      document.getElementById('helmertResultBox').innerHTML = `
+        <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gold-500/40 font-mono text-xs space-y-1">
+          <div class="text-gold-500 font-bold">2D Helmert Conformal Parameters Solved</div>
+          <div>Scale Factor: <strong>${params.scale.toFixed(7)}</strong> | Rotation: <strong>${COGO.degToDmsCompact(params.rotation)}</strong></div>
+          <div>Translation Y₀: <strong>${params.y0.toFixed(4)} m</strong> | Translation X₀: <strong>${params.x0.toFixed(4)} m</strong></div>
+          <div>a = <strong>${params.a.toFixed(8)}</strong> | b = <strong>${params.b.toFixed(8)}</strong></div>
+          <div>Standard Error (σ₀): <strong>${stdErr.toFixed(4)} m</strong></div>
+        </div>
+      `;
+      setStatus('Helmert transformation parameters active and saved locally.');
+    }
+
+    function saveManualHelmertParams() {
+      const y0 = parseFloat(document.getElementById('hp_y0').value) || 0;
+      const x0 = parseFloat(document.getElementById('hp_x0').value) || 0;
+      const a = parseFloat(document.getElementById('hp_a').value) || 1;
+      const b = parseFloat(document.getElementById('hp_b').value) || 0;
+      const scale = Math.sqrt(a * a + b * b);
+      const rotation = Math.atan2(b, a) * (180 / Math.PI);
+      appState.helmertParams = { a, b, x0, y0, scale, rotation };
+      saveModuleState();
+      renderCalculator();
+      setStatus('Manual Helmert parameters saved.');
+    }
+
+    function calcGridScale(sub) {
+      const val = parseFloat(document.getElementById('sca_input').value) || 0;
+      const k = sub === 'losca' ? ProjCorrection.loScale(val) : ProjCorrection.utmScale(val);
+      const ppm = (k - 1) * 1e6;
+      document.getElementById('sca_output').textContent = k.toFixed(8);
+      document.getElementById('sca_ppm').textContent = `${ppm >= 0 ? '+' : ''}${ppm.toFixed(2)} ppm (${((k - 1) * 1000).toFixed(4)} mm/m)`;
+    }
+
+    function calcSlopeSeaLevel() {
+      const hA = parseFloat(document.getElementById('slp_ha').value) || 0;
+      const hB = parseFloat(document.getElementById('slp_hb').value) || 0;
+      const s = parseFloat(document.getElementById('slp_s').value) || 0;
+      const R = 6371000;
+      if (s <= 0) { setStatus('Enter positive slope distance.'); return; }
+      const seaLevel = -s * (hA + hB) / (2 * R);
+      const slope = -Math.pow(hA - hB, 2) / (2 * s);
+      const ref = Math.pow(s, 3) / (25.6 * Math.pow(R, 2));
+      const totalCorr = seaLevel + slope + ref;
+      const horizDist = s + totalCorr;
+
+      document.getElementById('slpResultBox').innerHTML = `
+        <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gold-500/40 font-mono text-xs space-y-1">
+          <div class="text-gold-500 font-bold text-sm">Reduced Ellipsoidal Horizontal Distance: ${horizDist.toFixed(4)} m</div>
+          <div>Sea-Level Reduction: <strong>${seaLevel.toFixed(4)} m</strong></div>
+          <div>Slope Reduction: <strong>${slope.toFixed(4)} m</strong></div>
+          <div>Refraction / Arc Correction: <strong>+${ref.toFixed(5)} m</strong></div>
+          <div>Net Total Correction: <strong>${totalCorr.toFixed(4)} m</strong></div>
+        </div>
+      `;
+    }
+
+    // --- 4. CONVERSIONS EXECUTIONS ---
+    function execGridConversion(type, save) {
+      const cmOrg = parseFloat(document.getElementById('cm_origin').value);
+      const cmTar = parseFloat(document.getElementById('cm_target').value);
+      const y = parseFloat(document.getElementById('stn_y').value);
+      const x = parseFloat(document.getElementById('stn_x').value);
+      const useDatumShift = document.getElementById('apply_molodensky').checked;
+
+      if ([cmOrg, cmTar, y, x].some(isNaN)) {
+        setStatus('Enter valid Central Meridians and Easting/Northing coordinates.');
+        return;
+      }
+
+      let res, geog;
+      if (type === 'lo_utm') {
+        geog = GeodeticEngine.gridToGeog(-y, -x, 0, 0, 1, cmOrg * (Math.PI / 180), 'clarke1880');
+        if (useDatumShift) geog = GeodeticEngine.transformDatum(geog, 'Cape', 'WGS84');
+        res = GeodeticEngine.geogToGrid(geog.lat, geog.lon, 500000, 10000000, 0.9996, cmTar, useDatumShift ? 'wgs84' : 'clarke1880');
+      } else {
+        geog = GeodeticEngine.gridToGeog(y, x, 500000, 10000000, 0.9996, cmOrg * (Math.PI / 180), useDatumShift ? 'wgs84' : 'clarke1880');
+        if (useDatumShift) geog = GeodeticEngine.transformDatum(geog, 'WGS84', 'Cape');
+        const lo = GeodeticEngine.geogToGrid(Math.abs(geog.lat), geog.lon, 0, 0, 1, cmTar, 'clarke1880');
+        res = { y: lo.y, x: lo.x };
+      }
+
+      document.getElementById('convResultBox').innerHTML = `
+        <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gold-500/40 font-mono text-xs space-y-1">
+          <div class="text-gold-500 font-bold">${type === 'lo_utm' ? 'Target UTM Coordinates' : 'Target Gauss Conform Lo Coordinates'}</div>
+          <div>Easting (Y): <strong>${res.y.toFixed(4)}</strong> m</div>
+          <div>Northing (X): <strong>${res.x.toFixed(4)}</strong> m</div>
+          <div class="text-slate-400">Intermediate Geog: Lat ${geog.lat.toFixed(6)}°, Lon ${geog.lon.toFixed(6)}°</div>
+        </div>
+      `;
+      if (save) {
+        const ptId = `${type === 'lo_utm' ? 'UTM' : 'LO'}_${appState.points.length + 1}`;
+        addPointToDB(ptId, res.y, res.x, 0, type.toUpperCase());
+        setStatus(`Saved converted point ${ptId} to table.`);
+      }
+    }
+
+    function execGeoToGrid(save) {
+      const lat = parseFloat(document.getElementById('geo_lat').value);
+      const lon = parseFloat(document.getElementById('geo_lon').value);
+      const cm = parseFloat(document.getElementById('geo_cm').value);
+      const sys = document.getElementById('geo_sys').value;
+      if ([lat, lon, cm].some(isNaN)) { setStatus('Enter valid Latitude, Longitude, and CM.'); return; }
+
+      let res;
+      if (sys === 'utm_wgs84') {
+        res = GeodeticEngine.geogToGrid(lat, lon, 500000, 10000000, 0.9996, cm, 'wgs84');
+      } else {
+        const lo = GeodeticEngine.geogToGrid(Math.abs(lat), lon, 0, 0, 1, cm, 'clarke1880');
+        res = { y: lo.y, x: lo.x };
+      }
+
+      document.getElementById('convResultBox').innerHTML = `
+        <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gold-500/40 font-mono text-xs space-y-1">
+          <div class="text-gold-500 font-bold">Projected Grid Coordinates</div>
+          <div>Easting (Y): <strong>${res.y.toFixed(4)}</strong> m</div>
+          <div>Northing (X): <strong>${res.x.toFixed(4)}</strong> m</div>
+        </div>
+      `;
+      if (save) {
+        const ptId = `GEO_${appState.points.length + 1}`;
+        addPointToDB(ptId, res.y, res.x, 0, sys.toUpperCase());
+        setStatus(`Saved projected point ${ptId}.`);
+      }
+    }
+
+    function convertDmsLive() {
+      const dms = parseFloat(document.getElementById('in_dms').value);
+      document.getElementById('out_dec').textContent = isNaN(dms) ? '0.000000°' : `${COGO.dmsToDeg(dms).toFixed(6)}°`;
+    }
+    function convertDecLive() {
+      const dec = parseFloat(document.getElementById('in_dec').value);
+      document.getElementById('out_dms').textContent = isNaN(dec) ? '0°00\'00"' : COGO.degToDms(dec);
+    }
+    function convertUnitsLive() {
+      const val = parseFloat(document.getElementById('u_val').value) || 0;
+      const from = document.getElementById('u_from').value;
+      const to = document.getElementById('u_to').value;
+      const res = ProjCorrection.convert(val, from, to);
+      document.getElementById('u_out').textContent = `${res.toFixed(4)} ${to}`;
+    }
+
+    // --- 5. EARTHWORKS EXECUTIONS ---
+    function calcEarthworks(type) {
+      const box = document.getElementById('ewResultBox');
+      if (type === 'ew_level') {
+        const b = parseFloat(document.getElementById('ew_b').value) || 0;
+        const s = parseFloat(document.getElementById('ew_s').value) || 0;
+        const h1 = parseFloat(document.getElementById('ew_h1').value) || 0;
+        const h2 = parseFloat(document.getElementById('ew_h2').value) || 0;
+        const L = parseFloat(document.getElementById('ew_l').value) || 0;
+        const A1 = h1 * (b + s * h1);
+        const A2 = h2 * (b + s * h2);
+        const hm = (h1 + h2) / 2;
+        const Am = hm * (b + s * hm);
+        const volEnd = (L / 2) * (A1 + A2);
+        const volPrism = (L / 6) * (A1 + 4 * Am + A2);
+        box.innerHTML = `
+          <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gold-500/40 font-mono text-xs space-y-1">
+            <div>Section Area A₁: <strong>${A1.toFixed(3)} m²</strong> | Area A₂: <strong>${A2.toFixed(3)} m²</strong></div>
+            <div class="text-gold-500 font-bold">End-Area Volume: ${volEnd.toFixed(3)} m³</div>
+            <div class="text-cyan-500 font-bold">Prismoidal Volume: ${volPrism.toFixed(3)} m³</div>
+          </div>
+        `;
+      } else if (type === 'ew_two') {
+        const b = parseFloat(document.getElementById('ew_b').value) || 0;
+        const s = parseFloat(document.getElementById('ew_s').value) || 0;
+        const k = parseFloat(document.getElementById('ew_k').value) || 0;
+        const h = parseFloat(document.getElementById('ew_h1').value) || 0;
+        if (k <= s) { setStatus('Transverse slope k must be greater than side slope s.'); return; }
+        const w1 = ((b / 2 + s * h) * k) / (k + s);
+        const w2 = ((b / 2 + s * h) * k) / (k - s);
+        const area = (w1 * w2 - Math.pow(b / 2, 2)) / (2 * s);
+        box.innerHTML = `
+          <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gold-500/40 font-mono text-xs space-y-1">
+            <div>Downhill Half-Breadth w₁: <strong>${w1.toFixed(3)} m</strong> | Uphill Half-Breadth w₂: <strong>${w2.toFixed(3)} m</strong></div>
+            <div class="text-gold-500 font-bold text-sm">Cross-Sectional Area: ${area.toFixed(3)} m²</div>
+          </div>
+        `;
+      } else if (type === 'ew_three') {
+        const b = parseFloat(document.getElementById('ew_b').value) || 0;
+        const h = parseFloat(document.getElementById('ew_h').value) || 0;
+        const hL = parseFloat(document.getElementById('ew_hl').value) || 0;
+        const wL = parseFloat(document.getElementById('ew_wl').value) || 0;
+        const hR = parseFloat(document.getElementById('ew_hr').value) || 0;
+        const wR = parseFloat(document.getElementById('ew_wr').value) || 0;
+        const area = (h / 2) * (wL + wR) + (b / 4) * (hL + hR);
+        box.innerHTML = `
+          <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gold-500/40 font-mono text-xs">
+            <div class="text-gold-500 font-bold text-sm">Three-Level Cross-Sectional Area: ${area.toFixed(3)} m²</div>
+          </div>
+        `;
+      } else if (type === 'ew_sidehill') {
+        const b = parseFloat(document.getElementById('ew_b').value) || 0;
+        const sc = parseFloat(document.getElementById('ew_sc').value) || 0;
+        const sf = parseFloat(document.getElementById('ew_sf').value) || 0;
+        const k = parseFloat(document.getElementById('ew_k').value) || 0;
+        const h = parseFloat(document.getElementById('ew_h').value) || 0;
+        const cutArea = Math.pow(b / 2 + k * h, 2) / (2 * (k - sc));
+        const fillArea = Math.pow(b / 2 - k * h, 2) / (2 * (k - sf));
+        box.innerHTML = `
+          <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gold-500/40 font-mono text-xs space-y-1">
+            <div class="text-amber-500 font-bold">Cut Area: ${cutArea.toFixed(3)} m²</div>
+            <div class="text-cyan-500 font-bold">Fill Area: ${Math.max(0, fillArea).toFixed(3)} m²</div>
+          </div>
+        `;
+      }
+    }
+
+    function calcMultilevelArea() {
+      const raw = document.getElementById('ew_multi_pts').value.trim();
+      const pts = raw.split(/\r?\n/).map(l => {
+        const parts = l.split(/,|\s+/).map(Number);
+        return { y: parts[0], x: parts[1] };
+      }).filter(p => !isNaN(p.y) && !isNaN(p.x));
+      if (pts.length < 3) { setStatus('Enter at least 3 offset/elevation pairs.'); return 0; }
+      const area = calculateArea(pts).area;
+      document.getElementById('ewMultiAreaOut').textContent = `Computed Section Area = ${area.toFixed(3)} m²`;
+      return area;
+    }
+
+    function appendMultilevelToChainage() {
+      const area = calcMultilevelArea();
+      if (area > 0) {
+        const ch = appState.earthworkSections.length * 20;
+        appState.earthworkSections.push({ chainage: ch, area, type: 'Multilevel' });
+        saveModuleState();
+        renderCalculator();
+      }
+    }
+
+    function addChainageSection() {
+      const ch = parseFloat(document.getElementById('ew_ch_val').value);
+      const area = parseFloat(document.getElementById('ew_area_val').value);
+      if (isNaN(ch) || isNaN(area)) { setStatus('Enter Chainage and Area.'); return; }
+      appState.earthworkSections.push({ chainage: ch, area, type: 'Section' });
+      appState.earthworkSections.sort((a, b) => a.chainage - b.chainage);
+      saveModuleState();
+      renderCalculator();
+    }
+
+    function removeChainageSection(idx) {
+      appState.earthworkSections.splice(idx, 1);
+      saveModuleState();
+      renderCalculator();
+    }
+
+    function calcTotalChainageVolume() {
+      const secs = appState.earthworkSections;
+      if (secs.length < 2) { setStatus('Add at least 2 chainage sections.'); return; }
+      let endAreaVol = 0;
+      for (let i = 0; i < secs.length - 1; i++) {
+        const L = secs[i + 1].chainage - secs[i].chainage;
+        endAreaVol += (L / 2) * (secs[i].area + secs[i + 1].area);
+      }
+      // Prismoidal across triplets where spacing is uniform
+      let prismVol = 0;
+      let i = 0;
+      while (i < secs.length - 2) {
+        const L1 = secs[i + 1].chainage - secs[i].chainage;
+        const L2 = secs[i + 2].chainage - secs[i + 1].chainage;
+        if (Math.abs(L1 - L2) < 0.01) {
+          prismVol += ((L1 + L2) / 6) * (secs[i].area + 4 * secs[i + 1].area + secs[i + 2].area);
+          i += 2;
+        } else {
+          prismVol += (L1 / 2) * (secs[i].area + secs[i + 1].area);
+          i += 1;
+        }
+      }
+      if (i === secs.length - 2) {
+        const L = secs[i + 1].chainage - secs[i].chainage;
+        prismVol += (L / 2) * (secs[i].area + secs[i + 1].area);
+      }
+
+      document.getElementById('ewResultBox').innerHTML = `
+        <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gold-500/40 font-mono text-xs space-y-1">
+          <div class="text-gold-500 font-bold text-sm">Trapezoidal (End-Area) Total Volume: ${endAreaVol.toFixed(3)} m³</div>
+          <div class="text-cyan-500 font-bold text-sm">Simpson's / Prismoidal Total Volume: ${prismVol.toFixed(3)} m³</div>
+        </div>
+      `;
+    }
+
+    // --- 6. SETTING OUT EXECUTIONS ---
+    function calcHorizontalCurve() {
+      const R = parseFloat(document.getElementById('hc_r').value);
+      const deltaDeg = COGO.dmsToDeg(parseFloat(document.getElementById('hc_delta').value));
+      const piCh = parseFloat(document.getElementById('hc_pi_ch').value) || 0;
+      const interval = parseFloat(document.getElementById('hc_int').value) || 20;
+      const piY = parseFloat(document.getElementById('stn_y').value);
+      const piX = parseFloat(document.getElementById('stn_x').value);
+      const inBrg = COGO.dmsToDeg(parseFloat(document.getElementById('hc_brg').value) || 0);
+
+      if (isNaN(R) || R <= 0 || isNaN(deltaDeg) || deltaDeg <= 0) {
+        setStatus('Enter valid Radius and Deflection Angle.');
+        return;
+      }
+
+      const deltaRad = COGO.deg2rad(deltaDeg);
+      const T = R * Math.tan(deltaRad / 2);
+      const L = R * deltaRad;
+      const C = 2 * R * Math.sin(deltaRad / 2);
+      const E = R * (1 / Math.cos(deltaRad / 2) - 1);
+      const M = R * (1 - Math.cos(deltaRad / 2));
+
+      const bcCh = piCh - T;
+      const ecCh = bcCh + L;
+
+      // Optional BC coordinates (Back along incoming tangent by T from PI)
+      const hasCoords = !isNaN(piY) && !isNaN(piX);
+      let bcY = 0, bcX = 0;
+      if (hasCoords) {
+        const backOff = COGO.rectangular(T, (inBrg + 180) % 360);
+        bcY = piY + backOff.y;
+        bcX = piX + backOff.x;
+      }
+
+      // Build Pegging Schedule
+      const pegs = [];
+      pegs.push({ label: 'BC (PC)', ch: bcCh, arc: 0 });
+      let nextCh = Math.ceil(bcCh / interval) * interval;
+      if (nextCh <= bcCh + 0.001) nextCh += interval;
+      while (nextCh < ecCh - 0.001) {
+        pegs.push({ label: `PEG`, ch: nextCh, arc: nextCh - bcCh });
+        nextCh += interval;
+      }
+      pegs.push({ label: 'EC (PT)', ch: ecCh, arc: L });
+
+      const rowsHtml = pegs.map((p, i) => {
+        const subArc = i === 0 ? 0 : p.arc - pegs[i - 1].arc;
+        const subChord = 2 * R * Math.sin(subArc / (2 * R));
+        const deflDeg = (p.arc / (2 * R)) * (180 / Math.PI);
+        const longChordFromBC = 2 * R * Math.sin(p.arc / (2 * R));
+        let coordCols = '';
+        if (hasCoords) {
+          const off = COGO.rectangular(longChordFromBC, (inBrg + deflDeg) % 360);
+          coordCols = `<td class="p-2 text-right">${(bcY + off.y).toFixed(3)}</td><td class="p-2 text-right">${(bcX + off.x).toFixed(3)}</td>`;
+        }
+        return `
+          <tr>
+            <td class="p-2 font-bold">${p.label}</td>
+            <td class="p-2 text-right">${p.ch.toFixed(3)}</td>
+            <td class="p-2 text-right">${subChord.toFixed(3)}</td>
+            <td class="p-2 text-right">${COGO.degToDmsCompact(deflDeg)}</td>
+            ${coordCols}
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('soResultBox').innerHTML = `
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3 font-mono text-xs">
+          <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800"><div class="text-[10px] text-slate-400">Tangent T</div><strong>${T.toFixed(3)} m</strong></div>
+          <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800"><div class="text-[10px] text-slate-400">Curve Len L</div><strong>${L.toFixed(3)} m</strong></div>
+          <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800"><div class="text-[10px] text-slate-400">Long Chord C</div><strong>${C.toFixed(3)} m</strong></div>
+          <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800"><div class="text-[10px] text-slate-400">External E</div><strong>${E.toFixed(3)} m</strong></div>
+          <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800"><div class="text-[10px] text-slate-400">Mid-Ord M</div><strong>${M.toFixed(3)} m</strong></div>
+        </div>
+        <div class="overflow-auto max-h-64 rounded-xl border border-slate-200 dark:border-slate-800">
+          <table class="w-full text-xs font-mono">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-[10px] uppercase">
+              <tr>
+                <th class="p-2 text-left">Point</th>
+                <th class="p-2 text-right">Chainage</th>
+                <th class="p-2 text-right">Sub-Chord</th>
+                <th class="p-2 text-right">Cum Deflection</th>
+                ${hasCoords ? '<th class="p-2 text-right">Easting (Y)</th><th class="p-2 text-right">Northing (X)</th>' : ''}
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">${rowsHtml}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function calcVerticalCurve() {
+      const g1 = parseFloat(document.getElementById('vc_g1').value);
+      const g2 = parseFloat(document.getElementById('vc_g2').value);
+      const L = parseFloat(document.getElementById('vc_l').value);
+      const pviCh = parseFloat(document.getElementById('vc_pvi_ch').value);
+      const pviRl = parseFloat(document.getElementById('vc_pvi_rl').value);
+      const interval = parseFloat(document.getElementById('vc_int').value) || 20;
+
+      if ([g1, g2, L, pviCh, pviRl].some(isNaN) || L <= 0) {
+        setStatus('Enter valid grades, length, and PVI values.');
+        return;
+      }
+
+      const pvcCh = pviCh - L / 2;
+      const pvtCh = pviCh + L / 2;
+      const pvcRl = pviRl - (g1 / 100) * (L / 2);
+      const pvtRl = pviRl + (g2 / 100) * (L / 2);
+      const A = g2 - g1; // total grade change %
+      const r = A / L;   // rate of change per meter
+
+      // High / Low turning point where dy/dx = 0 => x = -g1 / r
+      let turnHtml = '';
+      if (Math.abs(r) > 1e-9) {
+        const xTurn = -g1 / r;
+        if (xTurn >= 0 && xTurn <= L) {
+          const turnCh = pvcCh + xTurn;
+          const turnRl = pvcRl + (g1 / 100) * xTurn + (r / 200) * xTurn * xTurn;
+          turnHtml = `<div class="p-2.5 rounded-xl bg-gold-500/15 border border-gold-500/40"><div class="text-[10px] text-gold-500 uppercase">${A < 0 ? 'Crest High Point' : 'Sag Low Point'}</div><strong>Ch ${turnCh.toFixed(3)} m | RL ${turnRl.toFixed(3)} m</strong></div>`;
+        }
+      }
+
+      const stations = [pvcCh];
+      let nextCh = Math.ceil(pvcCh / interval) * interval;
+      if (nextCh <= pvcCh + 0.001) nextCh += interval;
+      while (nextCh < pvtCh - 0.001) {
+        stations.push(nextCh);
+        nextCh += interval;
+      }
+      stations.push(pvtCh);
+
+      const rowsHtml = stations.map((ch, idx) => {
+        const x = ch - pvcCh;
+        const tanRl = pvcRl + (g1 / 100) * x;
+        const offset = (r / 200) * x * x;
+        const curveRl = tanRl + offset;
+        const tag = idx === 0 ? 'PVC (BVC)' : (idx === stations.length - 1 ? 'PVT (EVC)' : 'PEG');
+        return `
+          <tr>
+            <td class="p-2 font-bold">${tag}</td>
+            <td class="p-2 text-right">${ch.toFixed(3)}</td>
+            <td class="p-2 text-right">${x.toFixed(3)}</td>
+            <td class="p-2 text-right">${tanRl.toFixed(3)}</td>
+            <td class="p-2 text-right">${offset >= 0 ? '+' : ''}${offset.toFixed(4)}</td>
+            <td class="p-2 text-right font-bold text-gold-500">${curveRl.toFixed(3)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('soResultBox').innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3 font-mono text-xs">
+          <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800"><div class="text-[10px] text-slate-400">PVC (Start)</div><strong>Ch ${pvcCh.toFixed(3)} | RL ${pvcRl.toFixed(3)}</strong></div>
+          <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800"><div class="text-[10px] text-slate-400">PVT (End)</div><strong>Ch ${pvtCh.toFixed(3)} | RL ${pvtRl.toFixed(3)}</strong></div>
+          ${turnHtml || `<div class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800"><div class="text-[10px] text-slate-400">Rate of Change (r)</div><strong>${r.toFixed(4)} %/m</strong></div>`}
+        </div>
+        <div class="overflow-auto max-h-64 rounded-xl border border-slate-200 dark:border-slate-800">
+          <table class="w-full text-xs font-mono">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-[10px] uppercase">
+              <tr>
+                <th class="p-2 text-left">Point</th>
+                <th class="p-2 text-right">Chainage</th>
+                <th class="p-2 text-right">Dist x</th>
+                <th class="p-2 text-right">Tangent RL</th>
+                <th class="p-2 text-right">Offset y</th>
+                <th class="p-2 text-right">Curve RL</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">${rowsHtml}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // --- 7. AREA HELPERS ---
+    function popAreaVertex() {
+      appState.areaVertices.pop();
+      renderCalculator();
+    }
+    function clearAreaVertices() {
+      appState.areaVertices = [];
+      renderCalculator();
+    }
+
+    // --- 8. LEVELLING BOOKING & REDUCTION ---
+    function updateLvlCell(idx, field, val) {
+      appState.levellingRows[idx][field] = val;
+      saveModuleState();
+    }
+    function addLevellingRow() {
+      appState.levellingRows.push({ stn: `TP_${appState.levellingRows.length}`, bs: '', is: '', fs: '', remarks: '' });
+      saveModuleState();
+      renderCalculator();
+    }
+    function removeLevellingRow(idx) {
+      appState.levellingRows.splice(idx, 1);
+      saveModuleState();
+      renderCalculator();
+    }
+    function clearLevellingRows() {
+      appState.levellingRows = [{ stn: 'BM_1', bs: '', is: '', fs: '', remarks: 'Start' }];
+      saveModuleState();
+      renderCalculator();
+    }
+
+    function generateLevellingBooking() {
+      const startRl = parseFloat(document.getElementById('lvl_start_rl').value);
+      const endRlRaw = document.getElementById('lvl_end_rl').value;
+      const endRl = endRlRaw !== '' ? parseFloat(endRlRaw) : null;
+      const method = document.getElementById('lvl_method').value;
+
+      if (isNaN(startRl)) { setStatus('Enter a valid Opening Benchmark RL.'); return; }
+      const rows = appState.levellingRows;
+      if (rows.length === 0) { setStatus('Add levelling observations first.'); return; }
+
+      let sumBS = 0, sumFS = 0, sumRise = 0, sumFall = 0;
+      let prevReading = null;
+      let currentRl = startRl;
+      let currentHpc = null;
+      let cpCount = 0;
+      const reduced = [];
+
+      rows.forEach((r, idx) => {
+        const bs = r.bs !== '' ? parseFloat(r.bs) : null;
+        const is = r.is !== '' ? parseFloat(r.is) : null;
+        const fs = r.fs !== '' ? parseFloat(r.fs) : null;
+
+        if (bs !== null) sumBS += bs;
+        if (fs !== null) sumFS += fs;
+
+        let rise = null, fall = null;
+        if (idx === 0) {
+          currentRl = startRl;
+          if (bs !== null) {
+            prevReading = bs;
+            currentHpc = currentRl + bs;
+          }
+        } else {
+          // Foresight or Intermediate sight from previous instrument setup
+          const sight = fs !== null ? fs : is;
+          if (sight !== null && prevReading !== null) {
+            const diff = prevReading - sight;
+            if (diff >= 0) { rise = diff; sumRise += diff; }
+            else { fall = Math.abs(diff); sumFall += Math.abs(diff); }
+
+            if (method === 'rise_fall') {
+              currentRl += diff;
+            } else if (currentHpc !== null) {
+              currentRl = currentHpc - sight;
+            }
+          }
+          // If this row is a Change Point (both FS and BS present), establish new HPC
+          if (fs !== null && bs !== null) {
+            cpCount++;
+            prevReading = bs;
+            currentHpc = currentRl + bs;
+          } else if (is !== null) {
+            prevReading = is;
+          }
+        }
+
+        reduced.push({
+          stn: r.stn,
+          bs, is, fs,
+          rise, fall,
+          hpc: (bs !== null) ? currentHpc : null,
+          unadjRl: currentRl,
+          adj: 0,
+          finalRl: currentRl,
+          remarks: r.remarks
+        });
+      });
+
+      // Arithmetic Check
+      const diffBsFs = sumBS - sumFS;
+      const diffRiseFall = sumRise - sumFall;
+      const diffRl = reduced[reduced.length - 1].unadjRl - startRl;
+      const checkPass = Math.abs(diffBsFs - diffRiseFall) < 0.0015 && Math.abs(diffBsFs - diffRl) < 0.0015;
+
+      // Misclosure adjustment if closing BM is supplied
+      let misclosure = 0;
+      if (endRl !== null && !isNaN(endRl)) {
+        misclosure = endRl - reduced[reduced.length - 1].unadjRl;
+        let step = 0;
+        const totalSteps = Math.max(1, cpCount + 1);
+        reduced.forEach((row, i) => {
+          if (i > 0 && row.fs !== null) step++;
+          const corr = (misclosure * step) / totalSteps;
+          row.adj = corr;
+          row.finalRl = row.unadjRl + corr;
+        });
+      }
+
+      appState.lastBookingExport = {
+        type: 'levelling',
+        filename: `Levelling_Booking_${new Date().toISOString().split('T')[0]}.csv`,
+        csv: 'Station,BS,IS,FS,HPC,Rise,Fall,UnadjRL,Correction,FinalRL,Remarks\n' +
+          reduced.map(r => `${r.stn},${r.bs ?? ''},${r.is ?? ''},${r.fs ?? ''},${r.hpc !== null ? r.hpc.toFixed(3) : ''},${r.rise !== null ? r.rise.toFixed(3) : ''},${r.fall !== null ? r.fall.toFixed(3) : ''},${r.unadjRl.toFixed(3)},${r.adj.toFixed(4)},${r.finalRl.toFixed(3)},"${r.remarks || ''}"`).join('\n'),
+        levellingUpdate: reduced
+      };
+
+      document.getElementById('bookingModalTitle').textContent = `Levelling Booking Sheet (${method === 'rise_fall' ? 'Rise & Fall' : 'Height of Collimation'})`;
+      document.getElementById('saveBookingPointsBtn').classList.remove('hidden');
+      document.getElementById('printArea').innerHTML = `
+        <div class="border-b border-slate-300 dark:border-slate-700 pb-3 flex flex-wrap justify-between gap-2">
+          <div>
+            <div class="text-sm font-bold text-gold-500">KAYPAN GEOSYSTEMS — LEVELLING REDUCTION BOOKING</div>
+            <div class="text-[11px] text-slate-500">Generated: ${new Date().toLocaleString()} | Opening BM: ${startRl.toFixed(3)} m</div>
+          </div>
+          <div class="font-mono text-right text-[11px]">
+            <div>ΣBS - ΣFS = <strong>${diffBsFs.toFixed(4)} m</strong> | ΣRise - ΣFall = <strong>${diffRiseFall.toFixed(4)} m</strong></div>
+            <div>Last RL - First RL = <strong>${diffRl.toFixed(4)} m</strong> | Check: <strong class="${checkPass ? 'text-emerald-500' : 'text-rose-500'}">${checkPass ? 'PASS ✓' : 'CHECK ENTRIES'}</strong></div>
+            ${endRl !== null ? `<div>Closing Misclosure: <strong>${misclosure >= 0 ? '+' : ''}${misclosure.toFixed(4)} m</strong> (Distributed)</div>` : ''}
+          </div>
+        </div>
+
+        <table class="w-full font-mono text-[11px] border-collapse border border-slate-300 dark:border-slate-700">
+          <thead class="bg-slate-100 dark:bg-slate-800">
+            <tr>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-left">Station</th>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-right">BS</th>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-right">IS</th>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-right">FS</th>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-right">${method === 'hpc' ? 'HPC' : 'Rise'}</th>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-right">${method === 'hpc' ? '—' : 'Fall'}</th>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-right">Adj (m)</th>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-right">Reduced Level</th>
+              <th class="border border-slate-300 dark:border-slate-700 p-2 text-left">Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reduced.map(r => `
+              <tr>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 font-bold">${escapeHtml(r.stn)}</td>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 text-right">${r.bs !== null ? r.bs.toFixed(3) : ''}</td>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 text-right">${r.is !== null ? r.is.toFixed(3) : ''}</td>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 text-right">${r.fs !== null ? r.fs.toFixed(3) : ''}</td>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 text-right">${method === 'hpc' ? (r.hpc !== null ? r.hpc.toFixed(3) : '') : (r.rise !== null ? r.rise.toFixed(3) : '')}</td>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 text-right">${method === 'hpc' ? '' : (r.fall !== null ? r.fall.toFixed(3) : '')}</td>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 text-right text-cyan-500">${r.adj !== 0 ? (r.adj >= 0 ? '+' : '') + r.adj.toFixed(4) : '0.000'}</td>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 text-right font-bold text-gold-500">${r.finalRl.toFixed(3)}</td>
+                <td class="border border-slate-300 dark:border-slate-700 p-2 font-sans">${escapeHtml(r.remarks || '')}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      openModal('bookingModal');
+    }
+
+    function exportBookingCSV() {
+      if (!appState.lastBookingExport) return;
+      downloadBlob(appState.lastBookingExport.csv, appState.lastBookingExport.filename, 'text/csv;charset=utf-8;');
+      setStatus(`Exported ${appState.lastBookingExport.filename}`);
+    }
+
+    function saveBookingPointsToDB() {
+      if (!appState.lastBookingExport) return;
+      if (appState.lastBookingExport.type === 'traverse') {
+        appState.lastBookingExport.points.forEach(pt => {
+          addPointToDB(pt.pt_no, pt.easting, pt.northing, pt.elevation, pt.code);
+        });
+        closeModal('bookingModal');
+        setStatus(`Saved ${appState.lastBookingExport.points.length} traverse stations to Coordinate Database.`);
+      } else if (appState.lastBookingExport.type === 'levelling') {
+        let updated = 0, added = 0;
+        appState.lastBookingExport.levellingUpdate.forEach(row => {
+          const existing = appState.points.find(p => p.pt_no.toLowerCase() === row.stn.toLowerCase());
+          if (existing) {
+            existing.elevation = parseFloat(row.finalRl.toFixed(4));
+            updated++;
+          } else {
+            addPointToDB(row.stn, 0, 0, row.finalRl, row.remarks || 'LEVELLED');
+            added++;
+          }
+        });
+        savePointsToStorage();
+        closeModal('bookingModal');
+        setStatus(`Updated elevations on ${updated} existing point(s) and added ${added} new benchmark(s).`);
+      }
+    }
+
+    /* =========================================================================
+       8. MODAL & UI HELPERS
+       ========================================================================= */
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) { el.classList.remove('hidden'); el.classList.add('flex'); }
+    }
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) { el.classList.add('hidden'); el.classList.remove('flex'); }
+    }
+    function toggleMobileDbDrawer() {
+      const drawer = document.getElementById('dbPanel');
+      drawer.classList.toggle('hidden');
+      drawer.classList.toggle('flex');
+    }
+    function escapeHtml(str) {
+      return String(str ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+
+    // Boot Application
+    window.addEventListener('DOMContentLoaded', () => {
+      loadPersistedData();
+      renderPointsTable();
+      selectModule('cogo', 'r_be');
+    });
+  </script>
+</body>
+</html>
